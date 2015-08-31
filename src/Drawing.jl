@@ -29,7 +29,7 @@ current_context() = get(thread_context.context)
 # the ideas here structure the entire package:
 # 1 - you can spearate drawing into thngs that change the general state
 #     (colours, end caps, whether you're filling a region or a drawing
-#     a line), and detailed path actions.
+#     a line, etc), and detailed path actions.
 # 2 - the general state commands are scoped using with()
 # 3 - the general state commands may contain multiple actions that are
 #     applied before or after the path actions.
