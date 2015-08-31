@@ -26,27 +26,63 @@ current_context() = get(thread_context.context)
 
 # --- scoping infrastructure
 
-"""
-Scoped values, used with `with() do ... end`, to define some property of 
-the drawing within the do block.  All Scope subtypes must implement 
-`rank()` so that they can be sorted correctly within `with()`.
-"""
 abstract Scope
 
-"""
-Call `enter()` for each Scope, then execute the do block, and finally call
-`exit()` for each Scope.
-"""
+# Scope that can create the initial context
+abstract CreatingScope <:Scope
+
+rank(s::CreatingScope) = 0
+exclusive(s::CreatingScope) = true
+
+# Scope that modifies the intitial context via actions (before and after)
+type ExistingScope <: Scope
+    name::AbstractString
+    rank::Int
+    exclusive::Bool
+    before::Vector{Function}
+    after::Vector{Function}
+    function ExistingScope(name, rank, exclusive, before, after)
+        @assert rank > 0
+        new(name, rank, exclusive, before, after)
+    end
+end
+
+name(s::ExistingScope) = s.name
+rank(s::ExistingScope) = s.rank
+exclusive(s::ExistingScope) = s.exclusive
+before(s::ExistingScope) = s.before
+after(s::ExistingScope) = s.after
+
 function with(f, scopes::Scope...)
+
     # stable sort, respecting user where possible
     s = sort!([scopes...], by=rank, alg=InsertionSort)
     c = thread_context
+
+    # TODO - check for exclusive conflicts (and implement name())
+
+    if isnull(c.context) && (length(s) == 0 || !isa(s[1], CreatingScope))
+        s = [Paper(), s...]
+    end
+
     for scope in s
-        enter(c, scope)
+        for b in before(scope)
+            if isa(scope, CreatingScope)
+                b(c)
+            else
+                b(get(c.context))
+            end
+        end
     end
     f()
     for scope in reverse(s)
-        exit(c, scope)
+        for a in after(scope)
+            if isa(scope, CreatingScope)
+                a(c)
+            else
+                a(get(c.context))
+            end
+        end
     end
 end
 
@@ -75,7 +111,7 @@ function paper_size(size::AbstractString)
     end
 end
 
-type Paper <: Scope
+type Paper <: CreatingScope
     nx::Int
     ny::Int
     xl::Float64
@@ -102,74 +138,58 @@ function Paper(size::AbstractString; dpi=300::Int, background="white",
     end
 end
 
-rank(::Paper) = 10
+Paper() = Paper("a4")
 
-function enter(c, p::Paper)
-    ctx = X.CairoContext(X.CairoRGBSurface(p.nx, p.ny))
-    p.previous_context = c.context
-    c.context = NullableContext(ctx)
-
-    X.save(ctx)
-    X.rectangle(ctx, 0, 0, p.nx, p.ny)
-    X.set_source(ctx, p.background)
-    X.fill(ctx)
-    X.restore(ctx)
-    X.set_coords(ctx, 0, 0, p.nx, p.ny, p.xl, p.xr, p.yt, p.yb)
+function before(p::Paper)
+    [c -> begin
+     ctx = X.CairoContext(X.CairoRGBSurface(p.nx, p.ny))
+     p.previous_context = c.context
+     c.context = NullableContext(ctx)
+     
+     X.save(ctx)
+     X.rectangle(ctx, 0, 0, p.nx, p.ny)
+     X.set_source(ctx, p.background)
+     X.fill(ctx)
+     X.restore(ctx)
+     X.set_coords(ctx, 0, 0, p.nx, p.ny, p.xl, p.xr, p.yt, p.yb)
+     end]
 end
-
-exit(c, p::Paper) = c.context = p.previous_context
+     
+after(p::Paper) = [c -> c.context = p.previous_context]
 
 
 
 # --- output (file, display, etc)
 
-type File <: Scope
-    path::AbstractString
-end
-
-rank(::File) = 20  # after Paper (which sets the context), but before content
-
-enter(c, ::File) = nothing
-
 # TODO - other formats
-function exit(c, f::File)
-    ctx = get(c.context)
-    X.write_to_png(ctx.surface, f.path)
+function File(path::AbstractString)
+    ExistingScope("File", 1, false, Function[],
+                  [c -> X.write_to_png(c.surface, path)])
 end
 
 
 
 # --- line plotting
 
-type Pen <: Scope
-    foreground::C.Color
-    width::Float64
+function Pen(foreground; width=-1)
+    f = parse_color(foreground)
+    ExistingScope("Pen", 2, true, 
+                  [c -> X.set_source(c, f), c -> set_width(c, width)],
+                  [c -> X.stroke(c)])
 end
 
-Pen(foreground; width=-1) = Pen(parse_color(foreground), width)
-
-rank(::Pen) = 30
-
-function enter(c, p::Pen)
-    ctx = get(c.context)
-    X.set_source(ctx, p.foreground)
-
-    if p.width >= 0
+function set_width(c, width)
+    if width >= 0
         # width is in user coords, so scale to device coords
-        v = [p.width, p.width]
-        X.user_to_device_distance!(ctx, v)
+        v = [width, width]
+        X.user_to_device_distance!(c, v)
         w = maximum(map(abs, v))
-        X.set_line_width(ctx, w)
+        X.set_line_width(c, w)
     else
         # use 2% of smaller dimension
-        d = min(ctx.surface.width, ctx.surface.height)
-        X.set_line_width(ctx, d * 0.02)
+        d = min(c.surface.width, c.surface.height)
+        X.set_line_width(c, d * 0.02)
     end
-end
-
-function exit(c, p::Pen)
-    ctx = get(c.context)
-    X.stroke(ctx)
 end
 
 
