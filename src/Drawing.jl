@@ -29,10 +29,19 @@ current_context() = get(thread_context.context)
 abstract Scope
 
 # Scope that can create the initial context
-abstract CreatingScope <:Scope
+type CreatingScope <:Scope
+    name::AbstractString
+    before::Vector{Function}
+    after::Vector{Function}
+    previous_context::NullableContext
+    CreatingScope(name, before, after) = new(name, before, after, NullableContext())
+end
 
+name(s::CreatingScope) = s.name
 rank(s::CreatingScope) = 0
 exclusive(s::CreatingScope) = true
+before(s::CreatingScope) = s.before
+after(s::CreatingScope) = s.after
 
 # Scope that modifies the intitial context via actions (before and after)
 type ExistingScope <: Scope
@@ -53,6 +62,8 @@ exclusive(s::ExistingScope) = s.exclusive
 before(s::ExistingScope) = s.before
 after(s::ExistingScope) = s.after
 
+const NO_ACTIONS = Function[]
+
 function with(f, scopes::Scope...)
 
     # stable sort, respecting user where possible
@@ -68,6 +79,7 @@ function with(f, scopes::Scope...)
     for scope in s
         for b in before(scope)
             if isa(scope, CreatingScope)
+                scope.previous_context = c.context
                 b(c)
             else
                 b(get(c.context))
@@ -79,6 +91,7 @@ function with(f, scopes::Scope...)
         for a in after(scope)
             if isa(scope, CreatingScope)
                 a(c)
+                c.context = scope.previous_context
             else
                 a(get(c.context))
             end
@@ -103,6 +116,18 @@ immutable Orientation enumeration end
 const LANDSCAPE = Orientation(1)
 const PORTRAIT = Orientation(2)
 
+function Paper(size::AbstractString; dpi=300::Int, background="white", 
+               orientation=LANDSCAPE::Orientation, border=0.1::Float64,
+               scale=1.0::Float64)
+    bg = parse_color(background)
+    nx, ny = map(int, dpi * paper_size(size) / 25.4)
+    CreatingScope("Paper",
+                  [c -> c = X.CairoContext(X.CairoRGBSurface(nx, ny)),
+                   c -> set_background(c, nx, ny, bg),
+                   c -> set_coords(c, nx, ny, scale, border)],
+                  NO_ACTIONS)
+end
+
 function paper_size(size::AbstractString)
     if lowercase(size) == "a4"
         [210,297]
@@ -111,51 +136,25 @@ function paper_size(size::AbstractString)
     end
 end
 
-type Paper <: CreatingScope
-    nx::Int
-    ny::Int
-    xl::Float64
-    xr::Float64
-    yb::Float64
-    yt::Float64
-    background::C.Color
-    Paper(nx, ny, xl, xr, yb, yt, bg) = new(nx, ny, xl, xr, yb, yt, bg)
-    previous_context::NullableContext
+function set_background(c, nx, ny, bg)
+    X.save(c)
+    X.rectangle(c, 0, 0, nx, ny)
+    X.set_source(c, bg)
+    X.fill(c)
+    X.restore(c)
 end
 
-function Paper(size::AbstractString; dpi=300::Int, background="white", 
-               orientation=LANDSCAPE::Orientation, border=0.1::Float64,
-               scale=1.0::Float64)
-    bg = parse_color(background)
+function set_coords(x, nx, ny, scale, border)
     d = scale / (1.0 - 2*border)
     b = (d - scale) / 2
-    nx, ny = dpi * paper_size(size) / 25.4
     if orientation == PORTRAIT
-        Paper(int(nx), int(ny), -b, scale+b, -b, (ny/nx)*d - b, bg)
+        Paper(nx, ny, -b, scale+b, -b, (ny/nx)*d - b, bg)
     else
-        nx, ny = ny, nx
-        Paper(int(nx), int(ny), -b, (nx/ny)*d - b, -b, scale+b, bg)
+        Paper(ny, nx, -b, (ny/nx)*d - b, -b, scale+b, bg)
     end
 end
 
 Paper() = Paper("a4")
-
-function before(p::Paper)
-    [c -> begin
-     ctx = X.CairoContext(X.CairoRGBSurface(p.nx, p.ny))
-     p.previous_context = c.context
-     c.context = NullableContext(ctx)
-     
-     X.save(ctx)
-     X.rectangle(ctx, 0, 0, p.nx, p.ny)
-     X.set_source(ctx, p.background)
-     X.fill(ctx)
-     X.restore(ctx)
-     X.set_coords(ctx, 0, 0, p.nx, p.ny, p.xl, p.xr, p.yt, p.yb)
-     end]
-end
-     
-after(p::Paper) = [c -> c.context = p.previous_context]
 
 
 
@@ -163,7 +162,7 @@ after(p::Paper) = [c -> c.context = p.previous_context]
 
 # TODO - other formats
 function File(path::AbstractString)
-    ExistingScope("File", 1, false, Function[],
+    ExistingScope("File", 1, false, NO_ACTIONS,
                   [c -> X.write_to_png(c.surface, path)])
 end
 
