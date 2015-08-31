@@ -1,12 +1,14 @@
-[![Build Status](https://travis-ci.org/andrewcooke/Draw.jl.svg?branch=master)](https://travis-ci.org/andrewcooke/Draw.jl)
+[![Build Status](https://travis-ci.org/andrewcooke/Drawing.jl.svg?branch=master)](https://travis-ci.org/andrewcooke/Drawing.jl)
 
-# Draw
+# Drawing
 
 A library for drawing (diagrams, lines, shapes).
 
-In more formal terms - simple, imperative vector graphics.  For a declarative
-approach, see [Compose.jl](https://github.com/dcjones/Compose.jl).  For more
-control and complexity, see [Cairo.jl](https://github.com/JuliaLang/Cairo.jl).
+In more formal terms - simple, imperative vector graphics.  A wrapper around
+Cairo to give an interface closer to, for example, Processing.  For a
+declarative approach, see [Compose.jl](https://github.com/dcjones/Compose.jl).
+For more control and complexity, see
+[Cairo.jl](https://github.com/JuliaLang/Cairo.jl).
 
 ## Example
 
