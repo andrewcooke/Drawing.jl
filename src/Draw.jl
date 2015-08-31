@@ -23,6 +23,7 @@ thread_context = ThreadContext()
 current_context() = get(thread_context.context)
 
 
+
 # --- scoping infrastructure
 
 """
@@ -126,7 +127,7 @@ type File <: Scope
     path::AbstractString
 end
 
-rank(::File) = 20
+rank(::File) = 20  # after Paper (which sets the context), but before content
 
 enter(c, ::File) = nothing
 
@@ -182,7 +183,4 @@ end
 @lift(move, X.move_to)
 @lift(line, X.line_to)
 
-
-
 end
-
