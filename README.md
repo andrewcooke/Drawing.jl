@@ -14,7 +14,7 @@ Although simple, the package has two important aims:
 1. Changes to the graphics context are *scoped*.  This is implemented via "do
    blocks".
 
-2. The changes are *nested and composable*.  So, for example, you can define a
+2. Changes are *nested and composable*.  So, for example, you can define a
    context with certain pen attributes (colour, width, etc), and then have an
    inner scope that changes a subset of those values.
 
