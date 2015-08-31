@@ -36,4 +36,4 @@ end
 ```
 
 draws a red square, on a white background, in a 100x100 pixel png format
-image.
+image, with two different line widths.
