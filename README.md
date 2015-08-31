@@ -2,9 +2,9 @@
 
 # Draw
 
-A simple, imperative library for drawing (diagrams, lines, shapes).
+A library for drawing (diagrams, lines, shapes).
 
-In more formal terms - imperative vector graphics.  For a declarative
+In more formal terms - simple, imperative vector graphics.  For a declarative
 approach, see [Compose.jl](https://github.com/dcjones/Compose.jl).  For more
 control, see [Cairo.jl](https://github.com/JuliaLang/Cairo.jl).
 
