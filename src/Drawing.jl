@@ -129,23 +129,31 @@ immutable Orientation enumeration end
 const LANDSCAPE = Orientation(1)
 const PORTRAIT = Orientation(2)
 
+# it's OK (necessary, even) for this to have non-null defaults, because it's
+# setting up a completely new context (unlike other scopes, which are simply
+# modifying some part).
+
+function Paper(nx::Int, ny::Int; background="white", border=0.1::Float64)
+    bg = parse_color(background)
+    CreatingScope("Paper",
+                  () -> X.CairoContext(X.CairoRGBSurface(nx, ny)),
+                  [c -> set_background(c, nx, ny, bg),
+                   c -> set_coords(c, nx, ny, scale, border)],
+                  NO_ACTIONS)
+end
+
 function Paper(size::AbstractString; dpi=300::Int, background="white", 
                orientation=LANDSCAPE::Orientation, border=0.1::Float64,
                scale=1.0::Float64)
-    bg = parse_color(background)
     nx, ny = map(int, dpi * paper_size(size) / 25.4)
     if orientation == LANDSCAPE
         nx, ny = ny, nx
     end
-    CreatingScope("Paper",
-                  () -> X.CairoContext(X.CairoRGBSurface(nx, ny)),
-                  [c -> set_background(c, nx, ny, bg),
-                   c -> set_coords(c, orientation, nx, ny, scale, border)],
-                  NO_ACTIONS)
+    Paper(nx, ny; background=background, border=border)
 end
 
 # TODO - more sizes
-# these should be as prortrait (x, y)
+# these should be as portrait, in mm (x, y)
 function paper_size(size::AbstractString)
     if lowercase(size) == "a4"
         [210,297]
@@ -165,7 +173,7 @@ end
 function set_coords(c, orientation, nx, ny, scale, border)
     d = scale / (1.0 - 2*border)
     b = (d - scale) / 2
-    if orientation == PORTRAIT
+    if ny > ny  # portrait
         X.set_coords(c, 0, 0, nx, ny, -b, scale+b, (ny/nx)*d - b, -b)
     else
         X.set_coords(c, 0, 0, nx, ny, -b, (nx/ny)*d - b, scale+b, -b)

@@ -18,9 +18,7 @@ Although simple, the package has two important aims:
    context with certain pen attributes (colour, width, etc), and then have an
    inner scope that changes a subset of those values.
 
-Both of these are demonstrated in the examples below.
-
-## Example
+Both of these are demonstrated in the example below.
 
 ```julia
 with(File("foo.png"), Paper(100, 100), Pen("red"; width=0.01)) do
@@ -34,5 +32,5 @@ with(File("foo.png"), Paper(100, 100), Pen("red"; width=0.01)) do
 end
 ```
 
-draws a red square, on a white background, in a 100x100 pixel png format
+Which draws a red square, on a white background, in a 100x100 pixel png format
 image, with two different line widths.
