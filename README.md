@@ -6,7 +6,7 @@ A library for drawing (diagrams, lines, shapes).
 
 In more formal terms - simple, imperative vector graphics.  For a declarative
 approach, see [Compose.jl](https://github.com/dcjones/Compose.jl).  For more
-control, see [Cairo.jl](https://github.com/JuliaLang/Cairo.jl).
+control and complexity, see [Cairo.jl](https://github.com/JuliaLang/Cairo.jl).
 
 ## Example
 
