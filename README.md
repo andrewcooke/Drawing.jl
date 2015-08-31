@@ -19,7 +19,7 @@ Although simple, the package has two important aims:
    context with certain pen attributes (colour, width, etc), and then have an
    inner scope that changes a subset of those values.
 
-Both of these are demonstrated in the examples below:
+Both of these are demonstrated in the examples below.
 
 ## Example
 
