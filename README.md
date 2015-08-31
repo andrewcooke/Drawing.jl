@@ -10,16 +10,30 @@ declarative approach, see [Compose.jl](https://github.com/dcjones/Compose.jl).
 For more control and complexity, use
 [Cairo.jl](https://github.com/JuliaLang/Cairo.jl) directly.
 
+Although simple, the package has two important aims:
+
+1. Changes to the graphics context are *nested and scoped*.  This is
+   implemented via "do blocks".
+
+2. The changes are *composable*.  So, for example, it is you can define a
+   context with certain pen attributes (colour, width, etc), and then have an
+   inner scope that changes a subset of those values.
+
+Both of these are demonstrated in the examples below:
+
 ## Example
 
 ```julia
-with(File("foo.png"), Paper("a4"), Pen("red")) do
+with(File("foo.png"), Paper(100, 100), Pen("red"; width=0.01)) do
     move(0.0, 0.0)
     line(1.0, 0.0)
-    line(1.0, 1.0)
-    line(0.0, 1.0)
+	with(Pen(width=0.02)) do
+		line(1.0, 1.0)
+		line(0.0, 1.0)
+	end
     line(0.0, 0.0)
 end
 ```
 
-draws a red square, on a white background, A4 landscape at 300dpi.
+draws a red square, on a white background, in a 100x100 pixel png format
+image.
