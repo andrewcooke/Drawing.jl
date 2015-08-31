@@ -5,7 +5,7 @@ import Cairo; const X = Cairo
 import Graphics; const G = Graphics
 import Colors; const C = Colors
 
-export with, Paper, File, Pen, move, line, save
+export with, Paper, File, Pen, move, line
 
 
 
