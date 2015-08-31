@@ -4,7 +4,7 @@
 
 A library for drawing (diagrams, lines, shapes).
 
-In other words: a simple, imperative vector graphics; a wrapper around Cairo;
+In other words: simple, imperative vector graphics; a wrapper around Cairo;
 an interface similar to Processing.  For a declarative approach, see
 [Compose.jl](https://github.com/dcjones/Compose.jl).  For more control and
 complexity, use [Cairo.jl](https://github.com/JuliaLang/Cairo.jl) directly.
