@@ -26,6 +26,18 @@ current_context() = get(thread_context.context)
 
 # --- scoping infrastructure
 
+# the ideas here structure the entire package:
+# 1 - you can spearate drawing into thngs that change the general state
+#     (colours, end caps, whether you're filling a region or a drawing
+#     a line), and detailed path actions.
+# 2 - the general state commands are scoped using with()
+# 3 - the general state commands may contain multiple actions that are
+#     applied before or after the path actions.
+# 4 - there are different types of state commands, which have a natural
+#     order (rank), and which may be exclusive, or may be cumulative.
+# 5 - there's a special kinf of state command that is repsonsible for
+#     creating the initial context.
+
 abstract Scope
 
 # Scope that can create the initial context
@@ -78,6 +90,8 @@ function with(f, scopes::Scope...)
         s = [Paper(), s...]
     end
 
+    # TODO - save and restore context here
+
     for scope in s
         if isa(scope, CreatingScope)
             scope.previous_context = c.context
@@ -120,6 +134,9 @@ function Paper(size::AbstractString; dpi=300::Int, background="white",
                scale=1.0::Float64)
     bg = parse_color(background)
     nx, ny = map(int, dpi * paper_size(size) / 25.4)
+    if orientation == LANDSCAPE
+        nx, ny = ny, nx
+    end
     CreatingScope("Paper",
                   () -> X.CairoContext(X.CairoRGBSurface(nx, ny)),
                   [c -> set_background(c, nx, ny, bg),
@@ -127,6 +144,8 @@ function Paper(size::AbstractString; dpi=300::Int, background="white",
                   NO_ACTIONS)
 end
 
+# TODO - more sizes
+# these should be as prortrait (x, y)
 function paper_size(size::AbstractString)
     if lowercase(size) == "a4"
         [210,297]
@@ -149,7 +168,7 @@ function set_coords(c, orientation, nx, ny, scale, border)
     if orientation == PORTRAIT
         X.set_coords(c, 0, 0, nx, ny, -b, scale+b, (ny/nx)*d - b, -b)
     else
-        X.set_coords(c, 0, 0, ny, nx, -b, (ny/nx)*d - b, scale+b, -b)
+        X.set_coords(c, 0, 0, nx, ny, -b, (nx/ny)*d - b, scale+b, -b)
     end
 end
 
