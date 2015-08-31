@@ -1,5 +1,5 @@
 
-module Draw
+module Drawing
 
 import Cairo; const X = Cairo
 import Graphics; const G = Graphics
