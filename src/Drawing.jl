@@ -78,38 +78,45 @@ after(s::ExistingScope) = s.after
 
 const NO_ACTIONS = Function[]
 
+
 function with(f, scopes::Scope...)
 
     # stable sort, respecting user where possible
     s = sort!([scopes...], by=rank, alg=InsertionSort)
     c = thread_context
 
-    # TODO - check for exclusive conflicts (and implement name())
-
     if isnull(c.context) && (length(s) == 0 || !isa(s[1], CreatingScope))
         s = [Paper(), s...]
     end
 
-    # TODO - save and restore context here
+    # TODO - check for exclusive conflicts (and implement name())
+
+    if isa(s[1], CreatingScope)
+        s[1].previous_context = c.context
+        c.context = create(s[1])()
+    end
+
+    ctx = get(c.context)
+    X.save(ctx)
 
     for scope in s
-        if isa(scope, CreatingScope)
-            scope.previous_context = c.context
-            c.context = create(scope)()
-        end
         for b in before(scope)
-            b(get(c.context))
+            b(ctx)
         end
     end
     f()
     for scope in reverse(s)
         for a in after(scope)
-            a(get(c.context))
-        end
-        if isa(scope, CreatingScope)
-            c.context = scope.previous_context
+            a(ctx)
         end
     end
+    
+    X.restore(ctx)
+
+    if isa(s[1], CreatingScope)
+        c.context = s[1].previous_context
+    end
+
 end
 
 
@@ -133,7 +140,8 @@ const PORTRAIT = Orientation(2)
 # setting up a completely new context (unlike other scopes, which are simply
 # modifying some part).
 
-function Paper(nx::Int, ny::Int; background="white", border=0.1::Float64)
+function Paper(nx::Int, ny::Int; background="white", border=0.1::Float64,
+               scale=1.0::Float64)
     bg = parse_color(background)
     CreatingScope("Paper",
                   () -> X.CairoContext(X.CairoRGBSurface(nx, ny)),
@@ -149,7 +157,7 @@ function Paper(size::AbstractString; dpi=300::Int, background="white",
     if orientation == LANDSCAPE
         nx, ny = ny, nx
     end
-    Paper(nx, ny; background=background, border=border)
+    Paper(nx, ny; background=background, border=border, scale=scale)
 end
 
 # TODO - more sizes
@@ -170,7 +178,7 @@ function set_background(c, nx, ny, bg)
     X.restore(c)
 end
 
-function set_coords(c, orientation, nx, ny, scale, border)
+function set_coords(c, nx::Int, ny::Int, scale::Float64, border::Float64)
     d = scale / (1.0 - 2*border)
     b = (d - scale) / 2
     if ny > ny  # portrait
@@ -199,11 +207,14 @@ end
 function Pen(foreground; width=-1)
     f = parse_color(foreground)
     ExistingScope("Pen", 2, true, 
-                  [c -> X.set_source(c, f), c -> set_width(c, width)],
+                  [c -> (println(f); X.set_source(c, f)), c -> set_width(c, width)],
                   [c -> X.stroke(c)])
 end
 
+Pen(;width=-1) = Pen("black"; width=width)
+
 function set_width(c, width)
+    println("w $(width)")
     if width >= 0
         # width is in user coords, so scale to device coords
         v = [width, width]
