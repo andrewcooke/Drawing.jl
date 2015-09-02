@@ -1,8 +1,12 @@
 
+# isometric projection
 to_2d(x, y, z) = (y-x)*sqrt(3)/2, z-(x+y)/2
 
+# number of blocks along one side of square base
 const N = 20
 
+# (x,y) of uppermost corner of each tower's base "diamond", from the 
+# back to the front (and left to right).
 function roots()
     Task() do
         for sum in 0:2N-1
@@ -17,20 +21,7 @@ function roots()
     end
 end
 
-function column(x, y, z)
-    move(to_2d(x+1, y, z)...)
-    line(to_2d(x+1, y+1, z)...)
-    line(to_2d(x, y+1, z)...)
-    line(to_2d(x, y, z)...)
-    line(to_2d(x+1, y, z)...)
-    line(to_2d(x+1, y, 0)...)
-    line(to_2d(x+1, y+1, 0)...)
-    line(to_2d(x, y+1, 0)...)
-    line(to_2d(x, y+1, z)...)
-    move(to_2d(x+1, y+1, z)...)
-    line(to_2d(x+1, y+1, 0)...)
-end
-
+# the "outline" of a tower (for filling)
 function column_outline(x, y, z)
     move(to_2d(x+1, y, 0)...)
     line(to_2d(x+1, y+1, 0)...)
@@ -41,6 +32,17 @@ function column_outline(x, y, z)
     line(to_2d(x+1, y, 0)...)
 end
      
+# the outline extended with a "Y" (for stroking)
+function column(x, y, z)
+    column_outline(x, y, z)
+    move(to_2d(x+1, y, z)...)
+    line(to_2d(x+1, y+1, z)...)
+    line(to_2d(x, y+1, z)...)
+    move(to_2d(x+1, y+1, z)...)
+    line(to_2d(x+1, y+1, 0)...)
+end
+
+# put it all together
 with(File("towers.png"), Paper(300, 150; centred=true), 
 Ink("black"), Pen(0.03), Translate(0, 1), Scale(2.4/N)) do
     for (x,y) in roots()
