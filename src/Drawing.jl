@@ -7,15 +7,16 @@ import Colors; const C = Colors
 
 export has_current_point, get_current_point, 
        current_context,
-       with, draw, Paper, File, Pen, move, line
+       with, draw, 
+       Paper, File, Pen, Ink, 
+       move, line
 
 include("cairo.jl")
 
 # TODO
 # - composability
 # - defaults if we declare nothing
-# - enforcing scope nesting rules
-# - separate pen from ink
+# - enforcing scope nesting rules (validation)
 # _ more pen attributes (cap style, mitre, etc)
 # - paint
 # - fancy sources
@@ -222,17 +223,27 @@ end
 
 
 
-# --- line plotting
+# --- source attributes
 
-function Pen(foreground; width=-1)
+function Ink(foreground)
     f = parse_color(foreground)
-    State("Pen", RANK_STATE, 
-          [to_ctx(c -> X.set_source(c, f)),
-           to_ctx(c -> set_width(c, width))],
+    State("Ink", RANK_STATE, 
+          [to_ctx(c -> X.set_source(c, f))],
           NO_ACTIONS)
 end
 
-Pen(;width=-1) = Pen("black"; width=width)
+Ink() = Ink("black") 
+
+
+# --- stroke attributes
+
+function Pen(width)
+    State("Pen", RANK_STATE, 
+          [to_ctx(c -> set_width(c, width))],
+          NO_ACTIONS)
+end
+
+Pen() = Pen(-1)
 
 function set_width(c, width)
     if width >= 0

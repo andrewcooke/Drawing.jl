@@ -21,7 +21,7 @@ Although simple, the package has two important aims:
 # Examples
 
 ```julia
-with(File("red_blue.png"), Paper(100, 100), Ink("red"), Pen(0.01)) do
+with(File("red_blue_square.png"), Paper(100, 100), Ink("red"), Pen(0.1)) do
     draw() do
         move(0.0, 0.0)
         line(1.0, 0.0)
@@ -33,3 +33,5 @@ with(File("red_blue.png"), Paper(100, 100), Ink("red"), Pen(0.01)) do
 	end
 end
 ```
+
+![red_blue_square.png](tests/target/red_blue_square.png)
