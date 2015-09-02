@@ -15,8 +15,8 @@ Although simple, the package has two important aims:
    blocks".
 
 2. Changes are *nested and composable*.  So, for example, you can define a
-   context with certain pen attributes (colour, width, etc), and then have an
-   inner scope that changes a subset of those values.
+   context with certain attributes (ink colour, pen width, etc), and then have
+   an inner scope that changes a subset of those values.
 
 # Examples
 
