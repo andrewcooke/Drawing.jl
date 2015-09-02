@@ -34,4 +34,4 @@ with(File("red_blue_square.png"), Paper(100, 100), Ink("red"), Pen(0.1)) do
 end
 ```
 
-![red_blue_square.png](tests/target/red_blue_square.png)
+![red_blue_square.png](test/target/red_blue_square.png)
