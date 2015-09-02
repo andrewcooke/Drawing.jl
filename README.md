@@ -34,13 +34,13 @@ with(File("red_blue_square.png"), Paper(100, 100), Ink("red"), Pen(0.1)) do
 end
 ```
 
-<img align="center" src="test/target/red_blue_square.png"/>
+<img align="left" src="test/target/red_blue_square.png"/>
 
 The default coordinate system is from 0 to 1 (on the shorter axis, origin
 bottom left), with 10% of the space used as a border on each side.  Unlike
 "raw" cairo, the "current point" is preserved across strokes.
 
-<img align="center" src="test/target/towers.png">
+<img align="left" src="test/target/towers.png">
 
 This image was generated using the [towers.jl](test/towers.jl) script.  White
 ink fill is used to "hide" background towers.
