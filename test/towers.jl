@@ -41,8 +41,8 @@ function column_outline(x, y, z)
     line(to_2d(x+1, y, 0)...)
 end
      
-with(File("towers.png"), Paper(400, 200; centred=true), 
-Ink("black"), Pen(0.02), Translate(0, 1), Scale(2.4/N)) do
+with(File("towers.png"), Paper(300, 150; centred=true), 
+Ink("black"), Pen(0.03), Translate(0, 1), Scale(2.4/N)) do
     for (x,y) in roots()
         d = sqrt((x/N-1/2)^2 + (y/N-1/2)^2)
         z = max(0, cos(d * pi * 0.9) * N * 0.5 * rand())
