@@ -5,7 +5,7 @@ import Cairo; const X = Cairo
 import Graphics; const G = Graphics
 import Colors; const C = Colors
 
-export with, Paper, File, Pen, move, line
+export with, draw, Paper, File, Pen, move, line
 
 
 
@@ -13,10 +13,15 @@ export with, Paper, File, Pen, move, line
 
 typealias NullableContext Nullable{X.CairoContext}
 
+const LEVEL_INITIAL = 0
+const LEVEL_COMPOSE = 1
+const LEVEL_PATH = 2
+
 # this needs to be in a thread local variable once such things exist in julia
 type ThreadContext
     context::NullableContext
-    ThreadContext() = new(NullableContext())
+    level::Int
+    ThreadContext() = new(NullableContext(), LEVEL_INITIAL)
 end
 
 thread_context = ThreadContext()
@@ -26,98 +31,79 @@ current_context() = get(thread_context.context)
 
 # --- scoping infrastructure
 
-# the ideas here structure the entire package:
-# 1 - you can spearate drawing into thngs that change the general state
-#     (colours, end caps, whether you're filling a region or a drawing
-#     a line, etc), and detailed path actions.
-# 2 - the general state commands are scoped using with()
-# 3 - the general state commands may contain multiple actions that are
-#     applied before or after the path actions.
-# 4 - there are different types of state commands, which have a natural
-#     order (rank), and which may be exclusive, or may be cumulative.
-# 5 - there's a special kinf of state command that is repsonsible for
-#     creating the initial context.
-
-abstract Scope
-
-# Scope that can create the initial context
-type CreatingScope <:Scope
+# before and after are functions of (ThreadContext, State) -> nothing
+type State
     name::AbstractString
-    create::Function
+    rank::Int
     before::Vector{Function}
     after::Vector{Function}
     previous_context::NullableContext
-    CreatingScope(name, create, before, after) = new(name, create, before, after, NullableContext())
+    State(name, rank, before, after) = new(name, rank, before, after, NullableContext())
 end
-
-name(s::CreatingScope) = s.name
-rank(s::CreatingScope) = 0
-exclusive(s::CreatingScope) = true
-create(s::CreatingScope) = s.create
-before(s::CreatingScope) = s.before
-after(s::CreatingScope) = s.after
-
-# Scope that modifies the intitial context via actions (before and after)
-type ExistingScope <: Scope
-    name::AbstractString
-    rank::Int
-    exclusive::Bool
-    before::Vector{Function}
-    after::Vector{Function}
-    function ExistingScope(name, rank, exclusive, before, after)
-        @assert rank > 0
-        new(name, rank, exclusive, before, after)
-    end
-end
-
-name(s::ExistingScope) = s.name
-rank(s::ExistingScope) = s.rank
-exclusive(s::ExistingScope) = s.exclusive
-before(s::ExistingScope) = s.before
-after(s::ExistingScope) = s.after
 
 const NO_ACTIONS = Function[]
+to_ctx(f) = (c, s) -> f(get(c.context))
+NO_ACTION = c -> nothing
 
 
-function with(f, scopes::Scope...)
+function make_scope(verify, before, after)
 
-    # stable sort, respecting user where possible
-    s = sort!([scopes...], by=rank, alg=InsertionSort)
-    c = thread_context
+    function scope(f, states::State...)
 
-    if isnull(c.context) && (length(s) == 0 || !isa(s[1], CreatingScope))
-        s = [Paper(), s...]
-    end
-
-    # TODO - check for exclusive conflicts (and implement name())
-
-    if isa(s[1], CreatingScope)
-        s[1].previous_context = c.context
-        c.context = create(s[1])()
-    end
-
-    ctx = get(c.context)
-    X.save(ctx)
-
-    for scope in s
-        for b in before(scope)
-            b(ctx)
+        # stable sort, respecting user where possible
+        s = sort!([states...], by=s -> s.rank, alg=InsertionSort)
+        c = thread_context
+        
+        # outermost context must define paper
+        initial, saved = isnull(c.context), false
+        if initial
+            if length(s) == 0 || s[1].rank != 0
+                s = [Paper(), s...]
+            end
+        else
+            X.save(get(c.context))
+            saved = true
         end
-    end
-    f()
-    for scope in reverse(s)
-        for a in after(scope)
-            a(ctx)
+        
+        # check for exclusive conflicts
+        verify(c)
+        
+        for state in s
+            for b in state.before
+                b(c, state)
+            end
+            # save as soon as we have a context
+            if !saved && !isnull(c.context)
+                X.save(get(c.context))
+                saved = true
+            end
         end
-    end
-    
-    X.restore(ctx)
 
-    if isa(s[1], CreatingScope)
-        c.context = s[1].previous_context
-    end
+        before(get(c.context))
+        f()
+        after(get(c.context))
 
+        for state in reverse(s)
+            # restore (unsave) before replacing context
+            if initial && state.rank == 0 && saved
+                X.restore(get(c.context))
+                saved = false
+            end
+            for a in state.after
+                a(c, state)
+            end
+        end
+
+        if saved
+            X.restore(get(c.context))
+            saved = false
+        end
+        
+    end
 end
+
+with = make_scope(NO_ACTION, NO_ACTION, NO_ACTION)
+draw = make_scope(NO_ACTION, NO_ACTION, c -> X.stroke(c))
 
 
 
@@ -143,11 +129,11 @@ const PORTRAIT = Orientation(2)
 function Paper(nx::Int, ny::Int; background="white", border=0.1::Float64,
                scale=1.0::Float64)
     bg = parse_color(background)
-    CreatingScope("Paper",
-                  () -> X.CairoContext(X.CairoRGBSurface(nx, ny)),
-                  [c -> set_background(c, nx, ny, bg),
-                   c -> set_coords(c, nx, ny, scale, border)],
-                  NO_ACTIONS)
+    State("Paper", 0,
+          [(c, s) -> (s.previous_context = c.context; c.context = X.CairoContext(X.CairoRGBSurface(nx, ny))),
+           to_ctx(c -> set_background(c, nx, ny, bg)),
+           to_ctx(c -> set_coords(c, nx, ny, scale, border))],
+          NO_ACTIONS)
 end
 
 function Paper(size::AbstractString; dpi=300::Int, background="white", 
@@ -196,8 +182,9 @@ Paper() = Paper("a4")
 
 # TODO - other formats
 function File(path::AbstractString)
-    ExistingScope("File", 1, false, NO_ACTIONS,
-                  [c -> X.write_to_png(c.surface, path)])
+    State("File", 1,
+          NO_ACTIONS,
+          [to_ctx(c -> X.write_to_png(c.surface, path))])
 end
 
 
@@ -206,9 +193,10 @@ end
 
 function Pen(foreground; width=-1)
     f = parse_color(foreground)
-    ExistingScope("Pen", 2, true, 
-                  [c -> (println(f); X.set_source(c, f)), c -> set_width(c, width)],
-                  [c -> X.stroke(c)])
+    State("Pen", 2, 
+          [to_ctx(c -> (println(f); X.set_source(c, f))),
+           to_ctx(c -> set_width(c, width))],
+          [to_ctx(c -> (println("s"); X.stroke(c)))])
 end
 
 Pen(;width=-1) = Pen("black"; width=width)
