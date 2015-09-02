@@ -1,5 +1,5 @@
 
-with(File("red_square.png"), Paper(100, 100), Pen("red", width=0.05)) do
+with(File("orange_blue_square.png"), Paper(100, 100), Pen("red", width=0.05)) do
     draw(Pen("orange", width=0.05)) do
         move(0.0, 0.0)
         line(1.0, 0.0)
@@ -11,4 +11,4 @@ with(File("red_square.png"), Paper(100, 100), Pen("red", width=0.05)) do
     end
 end
 
-compare("red_square.png")
+compare("orange_blue_square.png")

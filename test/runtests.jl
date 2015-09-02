@@ -4,7 +4,10 @@ using Drawing
 using Base.Test
 using SHA: sha1
 
+include("cairo.jl")
+
 function compare(name)
+    print("$(name): ")
     h1 = open(name, "r") do f
         sha1(readall(f))
     end
@@ -12,8 +15,8 @@ function compare(name)
         sha1(readall(f))
     end
     @test h1 == h2
-    println("$(name) ok")
+    println("ok")
 end    
 
-include("basic_pen.jl")
+include("basics.jl")
 

@@ -5,8 +5,11 @@ import Cairo; const X = Cairo
 import Graphics; const G = Graphics
 import Colors; const C = Colors
 
-export with, draw, Paper, File, Pen, move, line
+export has_current_point, get_current_point, 
+       current_context,
+       with, draw, Paper, File, Pen, move, line
 
+include("cairo.jl")
 
 
 # --- global / thread-local state
@@ -102,9 +105,20 @@ function make_scope(verify, before, after)
     end
 end
 
-with = make_scope(NO_ACTION, NO_ACTION, NO_ACTION)
-draw = make_scope(NO_ACTION, NO_ACTION, c -> X.stroke(c))
 
+# --- scopes
+
+function stroke(c)
+    has_point = has_current_point(c)
+    x, y = get_current_point(c)
+    X.stroke(c)
+    if has_point
+        X.move_to(c, x, y)
+    end
+end    
+
+with = make_scope(NO_ACTION, NO_ACTION, NO_ACTION)
+draw = make_scope(NO_ACTION, NO_ACTION, stroke)
 
 
 # --- utilities
@@ -194,15 +208,14 @@ end
 function Pen(foreground; width=-1)
     f = parse_color(foreground)
     State("Pen", 2, 
-          [to_ctx(c -> (println(f); X.set_source(c, f))),
+          [to_ctx(c -> X.set_source(c, f)),
            to_ctx(c -> set_width(c, width))],
-          [to_ctx(c -> (println("s"); X.stroke(c)))])
+          NO_ACTIONS)
 end
 
 Pen(;width=-1) = Pen("black"; width=width)
 
 function set_width(c, width)
-    println("w $(width)")
     if width >= 0
         # width is in user coords, so scale to device coords
         v = [width, width]
