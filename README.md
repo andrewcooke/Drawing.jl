@@ -35,5 +35,5 @@ end
 ```
 
 <img align="left" src="test/target/red_blue_square.png"/> The default
-coordinate system is from 0 to 1 (on the shorter axis), with 10% of the size
+coordinate system is from 0 to 1 (on the shorter axis), with 10% of the space
 used as a border on each side.
