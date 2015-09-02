@@ -1,4 +1,6 @@
 
+# at some point these should be a pull request for Cairo.jl
+
 function has_current_point(ctx::X.CairoContext)
     ccall((:cairo_has_current_point, X._jl_libcairo), Int, (Ptr{Void},), ctx.ptr) != 0
 end

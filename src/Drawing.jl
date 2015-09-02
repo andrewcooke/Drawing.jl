@@ -11,6 +11,19 @@ export has_current_point, get_current_point,
 
 include("cairo.jl")
 
+# TODO
+# - composability
+# - defaults if we declare nothing
+# - enforcing scope nesting rules
+# - separate pen from ink
+# - paint
+# - fancy sources
+# - text
+# - curves
+# - translate, scale, rotate (but not general affine transforms)
+# - docs, docs, docs
+
+
 
 # --- global / thread-local state
 
@@ -34,13 +47,17 @@ current_context() = get(thread_context.context)
 
 # --- scoping infrastructure
 
+const RANK_BOOTSTRAP = 0
+const RANK_OUTPUT = 1
+const RANK_STATE = 2
+
 # before and after are functions of (ThreadContext, State) -> nothing
 type State
     name::AbstractString
     rank::Int
     before::Vector{Function}
     after::Vector{Function}
-    previous_context::NullableContext
+    previous_context::NullableContext  # only used at rank 0
     State(name, rank, before, after) = new(name, rank, before, after, NullableContext())
 end
 
@@ -60,7 +77,7 @@ function make_scope(verify, before, after)
         # outermost context must define paper
         initial, saved = isnull(c.context), false
         if initial
-            if length(s) == 0 || s[1].rank != 0
+            if length(s) == 0 || s[1].rank != RANK_BOOTSTRAP
                 s = [Paper(), s...]
             end
         else
@@ -88,7 +105,7 @@ function make_scope(verify, before, after)
 
         for state in reverse(s)
             # restore (unsave) before replacing context
-            if initial && state.rank == 0 && saved
+            if initial && state.rank == RANK_BOOTSTRAP && saved
                 X.restore(get(c.context))
                 saved = false
             end
@@ -104,6 +121,7 @@ function make_scope(verify, before, after)
         
     end
 end
+
 
 
 # --- scopes
@@ -143,7 +161,7 @@ const PORTRAIT = Orientation(2)
 function Paper(nx::Int, ny::Int; background="white", border=0.1::Float64,
                scale=1.0::Float64)
     bg = parse_color(background)
-    State("Paper", 0,
+    State("Paper", RANK_BOOTSTRAP,
           [(c, s) -> (s.previous_context = c.context; c.context = X.CairoContext(X.CairoRGBSurface(nx, ny))),
            to_ctx(c -> set_background(c, nx, ny, bg)),
            to_ctx(c -> set_coords(c, nx, ny, scale, border))],
@@ -196,7 +214,7 @@ Paper() = Paper("a4")
 
 # TODO - other formats
 function File(path::AbstractString)
-    State("File", 1,
+    State("File", RANK_OUTPUT,
           NO_ACTIONS,
           [to_ctx(c -> X.write_to_png(c.surface, path))])
 end
@@ -207,7 +225,7 @@ end
 
 function Pen(foreground; width=-1)
     f = parse_color(foreground)
-    State("Pen", 2, 
+    State("Pen", RANK_STATE, 
           [to_ctx(c -> X.set_source(c, f)),
            to_ctx(c -> set_width(c, width))],
           NO_ACTIONS)
