@@ -27,8 +27,9 @@ with(File("red_blue.png"), Paper(100, 100), Ink("red"), Pen(0.01)) do
         line(1.0, 0.0)
         line(1.0, 1.0)
     end
-	draw(Ink("blue") do
+	draw(Ink("blue")) do
 		line(0.0, 1.0)
         line(0.0, 0.0)
 	end
 end
+```
