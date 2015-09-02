@@ -16,6 +16,7 @@ include("cairo.jl")
 # - defaults if we declare nothing
 # - enforcing scope nesting rules
 # - separate pen from ink
+# _ more pen attributes (cap style, mitre, etc)
 # - paint
 # - fancy sources
 # - text
