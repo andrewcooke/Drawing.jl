@@ -9,7 +9,7 @@ an interface similar to Processing.  For a declarative approach, see
 [Compose.jl](https://github.com/dcjones/Compose.jl).  For more control and
 complexity, use [Cairo.jl](https://github.com/JuliaLang/Cairo.jl) directly.
 
-Although simple, the package has two important aims:
+In providing a simple API, the package has two important aims:
 
 1. Changes to the graphics context are *scoped*.  This is implemented via "do
    blocks".
@@ -38,3 +38,7 @@ end
 coordinate system is from 0 to 1 (on the shorter axis, origin bottom left),
 with 10% of the space used as a border on each side.  Unlike "raw" cairo,
 the "current point" is preserved across strokes.
+
+<img align="right" src="test/target/towers.png"> This image was generated
+using the [towers.jl](test/towers.jl) script.  White ink fill is used to
+"hide" background towers.

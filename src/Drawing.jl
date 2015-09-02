@@ -7,8 +7,8 @@ import Colors; const C = Colors
 
 export has_current_point, get_current_point, 
        current_context,
-       with, draw, 
-       Paper, File, Pen, Ink, 
+       with, draw, paint,
+       Paper, File, Pen, Ink, Scale, Translate,
        move, line
 
 include("cairo.jl")
@@ -128,17 +128,23 @@ end
 
 # --- scopes
 
-function stroke(c)
-    has_point = has_current_point(c)
-    x, y = get_current_point(c)
-    X.stroke(c)
-    if has_point
-        X.move_to(c, x, y)
+function with_current_point(action)
+    function (c)
+        has_point = has_current_point(c)
+        x, y = get_current_point(c)
+        action(c)
+        if has_point
+            X.move_to(c, x, y)
+        end
     end
 end    
 
+stroke = with_current_point(X.stroke)
+fill = with_current_point(X.fill)
+
 with = make_scope(NO_ACTION, NO_ACTION, NO_ACTION)
 draw = make_scope(NO_ACTION, NO_ACTION, stroke)
+paint = make_scope(NO_ACTION, NO_ACTION, fill)
 
 
 # --- utilities
@@ -161,23 +167,23 @@ const PORTRAIT = Orientation(2)
 # modifying some part).
 
 function Paper(nx::Int, ny::Int; background="white", border=0.1::Float64,
-               scale=1.0::Float64)
+               centred=false::Bool)
     bg = parse_color(background)
     State("Paper", RANK_BOOTSTRAP,
           [(c, s) -> (s.previous_context = c.context; c.context = X.CairoContext(X.CairoRGBSurface(nx, ny))),
            to_ctx(c -> set_background(c, nx, ny, bg)),
-           to_ctx(c -> set_coords(c, nx, ny, scale, border))],
+           to_ctx(c -> set_coords(c, nx, ny, border, centred))],
           NO_ACTIONS)
 end
 
 function Paper(size::AbstractString; dpi=300::Int, background="white", 
                orientation=LANDSCAPE::Orientation, border=0.1::Float64,
-               scale=1.0::Float64)
+               centred=false::Bool)
     nx, ny = map(int, dpi * paper_size(size) / 25.4)
     if orientation == LANDSCAPE
         nx, ny = ny, nx
     end
-    Paper(nx, ny; background=background, border=border, scale=scale)
+    Paper(nx, ny; background=background, border=border, centred=centred)
 end
 
 # TODO - more sizes
@@ -198,13 +204,23 @@ function set_background(c, nx, ny, bg)
     X.restore(c)
 end
 
-function set_coords(c, nx::Int, ny::Int, scale::Float64, border::Float64)
-    d = scale / (1.0 - 2*border)
-    b = (d - scale) / 2
-    if ny > ny  # portrait
-        X.set_coords(c, 0, 0, nx, ny, -b, scale+b, (ny/nx)*d - b, -b)
+function set_coords(c, nx::Int, ny::Int, border::Float64, centred::Bool)
+    if centred
+        d = 2 / (1 - 2*border)
+        b = (d - 2) / 2
+        if nx < ny  # portrait
+            G.set_coords(c, 0, 0, nx, ny, -1-b, 1+b, (ny/nx)+b, -(ny/nx)-b)
+        else
+            G.set_coords(c, 0, 0, nx, ny, -(nx/ny)-b, (nx/ny)+b, 1+b, -1-b)
+        end
     else
-        X.set_coords(c, 0, 0, nx, ny, -b, (nx/ny)*d - b, scale+b, -b)
+        d = 1 / (1 - 2*border)
+        b = (d - 1) / 2
+        if nx < ny  # portrait
+            G.set_coords(c, 0, 0, nx, ny, -b, 1+b, (ny/nx)*d - b, -b)
+        else
+            G.set_coords(c, 0, 0, nx, ny, -b, (nx/ny)*d - b, 1+b, -b)
+        end
     end
 end
 
@@ -235,6 +251,7 @@ end
 Ink() = Ink("black") 
 
 
+
 # --- stroke attributes
 
 function Pen(width)
@@ -257,6 +274,22 @@ function set_width(c, width)
         d = min(c.surface.width, c.surface.height)
         X.set_line_width(c, d * 0.02)
     end
+end
+
+
+
+# --- transforms
+
+function Scale(k)
+    State("Scale", RANK_STATE,
+          [to_ctx(c -> X.scale(c, k, k))],
+          NO_ACTIONS)
+end
+
+function Translate(x, y)
+    State("Translate", RANK_STATE,
+          [to_ctx(c -> X.translate(c, x, y))],
+          NO_ACTIONS)
 end
 
 
