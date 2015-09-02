@@ -18,19 +18,17 @@ Although simple, the package has two important aims:
    context with certain pen attributes (colour, width, etc), and then have an
    inner scope that changes a subset of those values.
 
-Both of these are demonstrated in the example below.
+# Examples
 
 ```julia
-with(File("foo.png"), Paper(100, 100), Pen("red"; width=0.01)) do
-    move(0.0, 0.0)
-    line(1.0, 0.0)
-	with(Pen(width=0.02)) do
-		line(1.0, 1.0)
+with(File("red_blue.png"), Paper(100, 100), Ink("red"), Pen(0.01)) do
+    draw() do
+        move(0.0, 0.0)
+        line(1.0, 0.0)
+        line(1.0, 1.0)
+    end
+	draw(Ink("blue") do
 		line(0.0, 1.0)
+        line(0.0, 0.0)
 	end
-    line(0.0, 0.0)
 end
-```
-
-Which draws a red square, on a white background, in a 100x100 pixel png format
-image, with two different line widths.
