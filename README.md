@@ -39,6 +39,6 @@ coordinate system is from 0 to 1 (on the shorter axis, origin bottom left),
 with 10% of the space used as a border on each side.  Unlike "raw" cairo,
 the "current point" is preserved across strokes.
 
-<img align="right" src="test/target/towers.png"> This image was generated
+<img align="left" src="test/target/towers.png"> This image was generated
 using the [towers.jl](test/towers.jl) script.  White ink fill is used to
 "hide" background towers.
