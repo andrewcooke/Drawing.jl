@@ -27,7 +27,7 @@ with(File("red_blue_square.png"), Paper(100, 100), Ink("red"), Pen(0.1)) do
         line(1.0, 0.0)
         line(1.0, 1.0)
     end
-	draw() do
+	draw() do  # the Ink is red here - the scope above has closed
 		line(0.0, 1.0)
         line(0.0, 0.0)
 	end
