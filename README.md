@@ -21,8 +21,7 @@ Although simple, the package has two important aims:
 # Examples
 
 ```julia
-with(File("red_blue_square.png"),
-     Paper(100, 100, background="grey"), Ink("red"), Pen(0.1)) do
+with(File("red_blue_square.png"), Paper(100, 100"), Ink("red"), Pen(0.1)) do
     draw() do
         move(0.0, 0.0)
         line(1.0, 0.0)
