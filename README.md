@@ -32,7 +32,8 @@ In providing a simple API, the package has two important aims:
 
 The design is somewhat experimental (how best to create scopes in Julia?), but
 appears to work.  The aim is to support a "reasonable subset" of Cairo's
-functionality, while supporting access to the "raw" Cairo librray if needed.
+functionality directly, while providing access to the "raw" Cairo librray if
+needed.
 
 # Example
 
