@@ -31,7 +31,7 @@ In providing a simple API, the package has two important aims:
    an inner scope that changes a subset of those values.
 
 The design is somewhat experimental (how best to create scopes in Julia?), but
-appears to work.  The aim is to support a "reasonable subset" of Cairo's
+appears to work well.  The aim is to support a "reasonable subset" of Cairo's
 functionality directly, while providing access to the "raw" Cairo librray if
 needed.
 
@@ -91,7 +91,7 @@ There are three kinds of attribute: bootstrap, output and state.
 
 The order of bootstrap and output attributes is not important, but they can
 only appear in the outermost scope.  The order of state attributes may be
-important (eg the relative order of `Scale()` and `Transform()`) and follows
+important (eg the relative order of `Scale()` and `Translate()`) and follows
 the order given in the scope, from left to right.
 
 ### Boot Attributes
