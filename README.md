@@ -18,6 +18,12 @@ In providing a simple API, the package has two important aims:
    context with certain attributes (ink colour, pen width, etc), and then have
    an inner scope that changes a subset of those values.
 
+* [Example](#example)
+* [API](#api)
+  * [Scopes](#scopes)
+  * [Attributes](#attributes)
+  * [Actions](#actions)
+
 # Example
 
 ```julia
