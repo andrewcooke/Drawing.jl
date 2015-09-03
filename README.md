@@ -8,6 +8,7 @@
   * [Scopes](#scopes)
   * [Attributes](#attributes)
   * [Actions](#actions)
+* [Raw Cairo](#raw-cairo)
 
 # Introduction
 
@@ -26,6 +27,10 @@ In providing a simple API, the package has two important aims:
 2. Changes are *nested and composable*.  So, for example, you can define a
    context with certain attributes (ink colour, pen width, etc), and then have
    an inner scope that changes a subset of those values.
+
+The design is somewhat experimental (how best to create scopes in Julia?), but
+appears to work.  The aim is to support a "reasonable subset" of Cairo's
+functionality, while supporting access to the "raw" Cairo librray if needed.
 
 # Example
 
@@ -101,5 +106,20 @@ TODO
 ## Actions
 
 Currently, all actions affect the Cairo path.
+
+TODO
+
+# Raw Cairo
+
+TODO
+
+# Omissions / Future Work
+
+* Support for text should be added at some point.
+
+* Support for multiple "pages" within a single scope will likely *not* be
+  added.
+
+# Gallery
 
 TODO
