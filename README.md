@@ -91,7 +91,7 @@ There are three kinds of attribute: bootstrap, output and state.
 
 The order of bootstrap and output attributes is not important, but they can
 only appear in the outermost scope.  The order of state attributes may be
-important (eg the relative order of `Scale()` and `Transform()` and follows
+important (eg the relative order of `Scale()` and `Transform()`) and follows
 the order given in the scope, from left to right.
 
 ### Boot Attributes
