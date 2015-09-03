@@ -118,10 +118,10 @@ TODO
 
 # Omissions / Future Work
 
-* Support for text should be added at some point.
+* Implement all the things listed in the TODO list in the
+  [source code](src/Drawing.jl).
 
-* Support for multiple "pages" within a single scope will likely *not* be
-  added.
+* Multiple "pages" within a single scope will likely *not* be added.
 
 # Gallery
 
