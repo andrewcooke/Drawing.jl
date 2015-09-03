@@ -21,7 +21,6 @@ include("cairo.jl")
 # - fancy sources
 # - text
 # - curves
-# - translate, scale, rotate (but not general affine transforms)
 # - docs, docs, docs
 
 
@@ -63,7 +62,7 @@ type State
 end
 
 const NO_ACTIONS = Function[]
-to_ctx(f) = (c, s) -> f(get(c.context))
+ctx(f) = (c, s) -> f(get(c.context))
 NO_ACTION = c -> nothing
 
 
@@ -170,8 +169,8 @@ function Paper(nx::Int, ny::Int; background="white", border=0.1::Float64,
     bg = parse_color(background)
     State("Paper", RANK_BOOTSTRAP,
           [(c, s) -> (s.previous_context = c.context; c.context = X.CairoContext(X.CairoRGBSurface(nx, ny))),
-           to_ctx(c -> set_background(c, nx, ny, bg)),
-           to_ctx(c -> set_coords(c, nx, ny, border, centred))],
+           ctx(c -> set_background(c, nx, ny, bg)),
+           ctx(c -> set_coords(c, nx, ny, border, centred))],
           NO_ACTIONS)
 end
 
@@ -233,7 +232,7 @@ Paper() = Paper("a4")
 function File(path::AbstractString)
     State("File", RANK_OUTPUT,
           NO_ACTIONS,
-          [to_ctx(c -> X.write_to_png(c.surface, path))])
+          [ctx(c -> X.write_to_png(c.surface, path))])
 end
 
 
@@ -243,7 +242,7 @@ end
 function Ink(foreground)
     f = parse_color(foreground)
     State("Ink", RANK_STATE, 
-          [to_ctx(c -> X.set_source(c, f))],
+          [ctx(c -> X.set_source(c, f))],
           NO_ACTIONS)
 end
 
@@ -255,7 +254,7 @@ Ink() = Ink("black")
 
 function Pen(width)
     State("Pen", RANK_STATE, 
-          [to_ctx(c -> set_width(c, width))],
+          [ctx(c -> set_width(c, width))],
           NO_ACTIONS)
 end
 
@@ -279,29 +278,13 @@ end
 
 # --- transforms
 
-function Scale(k)
-    State("Scale", RANK_STATE,
-          [to_ctx(c -> X.scale(c, k, k))],
-          NO_ACTIONS)
-end
+Scale(k) = State("Scale", RANK_STATE, [ctx(c -> X.scale(c, k, k))], NO_ACTIONS)
 
-function Scale(x, y)
-    State("Scale", RANK_STATE,
-          [to_ctx(c -> X.scale(c, x, y))],
-          NO_ACTIONS)
-end
+Scale(x, y) = State("Scale", RANK_STATE, [ctx(c -> X.scale(c, x, y))], NO_ACTIONS)
 
-function Translate(x, y)
-    State("Translate", RANK_STATE,
-          [to_ctx(c -> X.translate(c, x, y))],
-          NO_ACTIONS)
-end
+Translate(x, y) = State("Translate", RANK_STATE, [ctx(c -> X.translate(c, x, y))], NO_ACTIONS)
 
-function Rotate(d)
-    State("Rotate", RANK_STATE,
-          [to_ctx(c -> X.rotate(c, d))],
-          NO_ACTIONS)
-end
+Rotate(d) = State("Rotate", RANK_STATE, [ctx(c -> X.rotate(c, d))], NO_ACTIONS)
 
 
 
