@@ -12,6 +12,13 @@ compare("portrait.png")
 draw(square, File("landscape.png"), Paper(100, 70))
 compare("landscape.png")
 
+draw(square, File("scale.png"), Paper(70, 100), Scale(0.75))
+compare("scale.png")
+draw(square, File("translate.png"), Paper(70, 100), Translate(0.1, 0.1))
+compare("translate.png")
+draw(square, File("rotate.png"), Paper(70, 100), Rotate(pi/4))
+compare("rotate.png")
+
 function centred_square()
     move(-1,-1)
     line(-1,1)

@@ -8,7 +8,7 @@ import Colors; const C = Colors
 export has_current_point, get_current_point, 
        current_context,
        with, draw, paint,
-       Paper, File, Pen, Ink, Scale, Translate,
+       Paper, File, Pen, Ink, Scale, Translate, Rotate,
        move, line
 
 include("cairo.jl")
@@ -18,7 +18,6 @@ include("cairo.jl")
 # - defaults if we declare nothing
 # - enforcing scope nesting rules (validation)
 # _ more pen attributes (cap style, mitre, etc)
-# - paint
 # - fancy sources
 # - text
 # - curves
@@ -289,6 +288,12 @@ end
 function Translate(x, y)
     State("Translate", RANK_STATE,
           [to_ctx(c -> X.translate(c, x, y))],
+          NO_ACTIONS)
+end
+
+function Rotate(d)
+    State("Rotate", RANK_STATE,
+          [to_ctx(c -> X.rotate(c, d))],
           NO_ACTIONS)
 end
 
