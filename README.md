@@ -34,7 +34,7 @@ with(File("red_blue_square.png"), Paper(100, 100), Ink("red"), Pen(0.1)) do
 end
 ```
 
-<img align="right" src="test/target/red_blue_square.png"/>
+<img align="left" src="test/target/red_blue_square.png"/>
 
 The default coordinate system is from 0 to 1 (on the shorter axis, origin
 bottom left), with 10% of the space used as a border on each side.  Unlike
@@ -42,7 +42,7 @@ bottom left), with 10% of the space used as a border on each side.  Unlike
 
 # API
 
-The API consists of three kinds:
+The API consists of:
 
 1. **Scopes** introduce *attributes*, may include either nested *scopes* or
    *actions*, and may trigger some process (like stroking or filling a path)
