@@ -2,11 +2,14 @@
 
 # Drawing
 
+* [Introduction](#introduction)
 * [Example](#example)
 * [API](#api)
   * [Scopes](#scopes)
   * [Attributes](#attributes)
   * [Actions](#actions)
+
+# Introduction
 
 A library for drawing (diagrams, lines, shapes).
 
