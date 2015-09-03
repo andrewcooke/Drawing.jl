@@ -22,7 +22,8 @@ include("cairo.jl")
 # - text
 # - curves
 # - docs, docs, docs
-
+# - other output formats
+# - other paper sizes
 
 
 # --- global / thread-local state
@@ -184,7 +185,6 @@ function Paper(size::AbstractString; dpi=300::Int, background="white",
     Paper(nx, ny; background=background, border=border, centred=centred)
 end
 
-# TODO - more sizes
 # these should be as portrait, in mm (x, y)
 function paper_size(size::AbstractString)
     if lowercase(size) == "a4"
@@ -228,7 +228,6 @@ Paper() = Paper("a4")
 
 # --- output (file, display, etc)
 
-# TODO - other formats
 function File(path::AbstractString)
     State("File", RANK_OUTPUT,
           NO_ACTIONS,
@@ -279,11 +278,8 @@ end
 # --- transforms
 
 Scale(k) = State("Scale", RANK_STATE, [ctx(c -> X.scale(c, k, k))], NO_ACTIONS)
-
 Scale(x, y) = State("Scale", RANK_STATE, [ctx(c -> X.scale(c, x, y))], NO_ACTIONS)
-
 Translate(x, y) = State("Translate", RANK_STATE, [ctx(c -> X.translate(c, x, y))], NO_ACTIONS)
-
 Rotate(d) = State("Rotate", RANK_STATE, [ctx(c -> X.rotate(c, d))], NO_ACTIONS)
 
 
