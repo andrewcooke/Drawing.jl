@@ -9,6 +9,8 @@
   * [Attributes](#attributes)
   * [Actions](#actions)
 * [Raw Cairo](#raw-cairo)
+* [Omissions / Future Work](#omissions--future-work)
+* [Gallery](#gallery)
 
 # Introduction
 
