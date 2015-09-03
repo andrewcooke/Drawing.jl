@@ -146,6 +146,7 @@ draw = make_scope(NO_ACTION, NO_ACTION, stroke)
 paint = make_scope(NO_ACTION, NO_ACTION, fill)
 
 
+
 # --- utilities
 
 parse_color(c::AbstractString) = parse(C.Colorant, c)
@@ -229,8 +230,7 @@ Paper() = Paper("a4")
 # --- output (file, display, etc)
 
 function File(path::AbstractString)
-    State("File", RANK_OUTPUT,
-          NO_ACTIONS,
+    State("File", RANK_OUTPUT, NO_ACTIONS,
           [ctx(c -> X.write_to_png(c.surface, path))])
 end
 
@@ -240,9 +240,7 @@ end
 
 function Ink(foreground)
     f = parse_color(foreground)
-    State("Ink", RANK_STATE, 
-          [ctx(c -> X.set_source(c, f))],
-          NO_ACTIONS)
+    State("Ink", RANK_STATE, [ctx(c -> X.set_source(c, f))], NO_ACTIONS)
 end
 
 Ink() = Ink("black") 
@@ -251,11 +249,7 @@ Ink() = Ink("black")
 
 # --- stroke attributes
 
-function Pen(width)
-    State("Pen", RANK_STATE, 
-          [ctx(c -> set_width(c, width))],
-          NO_ACTIONS)
-end
+Pen(width) = State("Pen", RANK_STATE, [ctx(c -> set_width(c, width))], NO_ACTIONS)
 
 Pen() = Pen(-1)
 
