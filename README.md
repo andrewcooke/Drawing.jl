@@ -55,6 +55,9 @@ The API consists of:
 3. **Actions** typically describe a Cairo path.  For example, `move()` and
    `line()`.
 
+These can be seen in the example above, which has three scopes, nested two
+deep, and includes the attributes `Paper()`, `Ink()`, etc.
+
 ## Scopes
 
 * `with()` defines a scope, but takes no action on closing.
@@ -63,4 +66,31 @@ The API consists of:
 
 * `paint()` defines a scope and, on closing, fills the current path.
 
-There are some constraints on how scopes are nested: 
+There are some constraints on how scopes are nested: TODO
+
+## Attributes
+
+There are three kinds of attribute: bootstrap, output and state.
+
+The order of bootstrap and output attributes is not important, but they can
+only appear in the outermost scope.  The order of state attributes may be
+important (eg the relative order of `Scale()` and `Transform()` and follows
+the order given in the scope, from left to right.
+
+### Boot Attributes
+
+TODO
+
+### Output Attributes
+
+TODO
+
+### State Attributes
+
+TODO
+
+## Actions
+
+Currently, all actions affect the Cairo path.
+
+TODO
