@@ -18,9 +18,7 @@ In providing a simple API, the package has two important aims:
    context with certain attributes (ink colour, pen width, etc), and then have
    an inner scope that changes a subset of those values.
 
-# Examples
-
-## Red Blue Square
+# Example
 
 ```julia
 with(File("red_blue_square.png"), Paper(100, 100), Ink("red"), Pen(0.1)) do
@@ -42,9 +40,27 @@ The default coordinate system is from 0 to 1 (on the shorter axis, origin
 bottom left), with 10% of the space used as a border on each side.  Unlike
 "raw" cairo, the "current point" is preserved across strokes.
 
-## Towers
+# API
 
-<img align="left" src="test/target/towers.png">
+The API consists of three kinds:
 
-This image was generated using the [towers.jl](test/towers.jl) script.  White
-ink fill is used to "hide" background towers.
+1. **Scopes** introduce *attributes*, may include either nested *scopes* or
+   *actions*, and may trigger some process (like stroking or filling a path)
+   at the end.  For example, `with()` is a scope that intrduces attributes,
+   but does not trigger any process on closing.
+
+2. **Attributes** modify the Cairo context for the duration of the scope.  For
+   example, `Ink()` sets the Cairo source for the scope.
+
+3. **Actions** typically describe a Cairo path.  For example, `move()` and
+   `line()`.
+
+## Scopes
+
+* `with()` defines a scope, but takes no action on closing.
+
+* `draw()` defines a scope and, on closing, strokes the current path.
+
+* `paint()` defines a scope and, on closing, fills the current path.
+
+There are some constraints on how scopes are nested: 
