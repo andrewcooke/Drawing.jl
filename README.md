@@ -2,6 +2,12 @@
 
 # Drawing
 
+* [Example](#example)
+* [API](#api)
+  * [Scopes](#scopes)
+  * [Attributes](#attributes)
+  * [Actions](#actions)
+
 A library for drawing (diagrams, lines, shapes).
 
 In other words: simple, imperative vector graphics; a wrapper around Cairo;
@@ -17,12 +23,6 @@ In providing a simple API, the package has two important aims:
 2. Changes are *nested and composable*.  So, for example, you can define a
    context with certain attributes (ink colour, pen width, etc), and then have
    an inner scope that changes a subset of those values.
-
-* [Example](#example)
-* [API](#api)
-  * [Scopes](#scopes)
-  * [Attributes](#attributes)
-  * [Actions](#actions)
 
 # Example
 
