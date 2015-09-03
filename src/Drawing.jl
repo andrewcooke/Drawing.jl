@@ -285,6 +285,12 @@ function Scale(k)
           NO_ACTIONS)
 end
 
+function Scale(x, y)
+    State("Scale", RANK_STATE,
+          [to_ctx(c -> X.scale(c, x, y))],
+          NO_ACTIONS)
+end
+
 function Translate(x, y)
     State("Translate", RANK_STATE,
           [to_ctx(c -> X.translate(c, x, y))],

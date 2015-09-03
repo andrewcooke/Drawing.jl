@@ -14,6 +14,8 @@ compare("landscape.png")
 
 draw(square, File("scale.png"), Paper(70, 100), Scale(0.75))
 compare("scale.png")
+draw(square, File("scale2.png"), Paper(70, 100), Scale(0.75, 1.25))
+compare("scale2.png")
 draw(square, File("translate.png"), Paper(70, 100), Translate(0.1, 0.1))
 compare("translate.png")
 draw(square, File("rotate.png"), Paper(70, 100), Rotate(pi/4))
