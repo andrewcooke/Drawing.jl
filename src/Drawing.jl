@@ -194,6 +194,7 @@ end
 function set_background(c, nx, ny, bg)
     X.save(c)
     X.rectangle(c, 0, 0, nx, ny)
+    println(bg)
     X.set_source(c, bg)
     X.fill(c)
     X.restore(c)
