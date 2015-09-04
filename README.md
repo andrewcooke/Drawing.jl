@@ -106,7 +106,8 @@ as a fraction of the smallest side), the coordinate system is either bottom
 left, or centred, and has is scaled so that the smallest axis has unit length.
 
 Example axes (x is horizontal) for 70x100 pages, with a border of 0.1, where
-the landscape axes are centred.
+the landscape axes are centred:
+
 ![portrait](test/target/portrait.png)
 ![landscape, centred](test/target/centred_landscape.png)
 
