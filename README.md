@@ -105,8 +105,9 @@ Cairo context of the given size (in pixels).  Excluding the border (measured
 as a fraction of the smallest side), the coordinate system is either bottom
 left, or centred, and has is scaled so that the smallest axis has unit length.
 
-Example axes (x is horizontal) for 70x100 pages, with a border of 0.1, where
-the landscape axes are centred:
+Example unit axes (x is horizontal) for 70x100 pages, with a border of 0.1 (ie
+7 pixels), where the landscape axes are centred.  Note that drawing is not
+clipped to the unit axes area - it can extend over the whole page.
 
 ![portrait](test/target/portrait.png)
 ![landscape, centred](test/target/centred_landscape.png)
