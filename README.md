@@ -103,7 +103,8 @@ the order given in the scope, from left to right.
 `Paper(nx, ny; background="white", border=0.1, centred=false)` initialises a
 Cairo context of the given size (in pixels).  Excluding the border (measured
 as a fraction of the smallest side), the coordinate system is either bottom
-left, or centred, and has is scaled so that the smallest axis has unit length.
+left, or centred, and is scaled uniformly, so that the smallest axis has unit
+length.
 
 Example unit axes (x is horizontal) for 70x100 pages, with a border of 0.1 (ie
 7 pixels), where the landscape axes are centred.  Note that drawing is not
