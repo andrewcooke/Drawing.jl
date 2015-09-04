@@ -24,6 +24,7 @@ include("cairo.jl")
 # - docs, docs, docs
 # - other output formats
 # - other paper sizes
+# - actins that take lists of points (or generators?)
 
 
 # --- global / thread-local state
@@ -52,69 +53,78 @@ const RANK_BOOTSTRAP = 0
 const RANK_OUTPUT = 1
 const RANK_STATE = 2
 
-# before and after are functions of (ThreadContext, State) -> nothing
-type State
+# before and after are functions of (ThreadContext, Attribute) -> nothing
+type Attribute
     name::AbstractString
     rank::Int
     before::Vector{Function}
     after::Vector{Function}
-    State(name, rank, before, after) = new(name, rank, before, after)
+    Attribute(name, rank, before, after) = new(name, rank, before, after)
 end
 
 const NO_ACTIONS = Function[]
-ctx(f) = (c, s) -> f(get(c.context))
+ctx(f) = (c, a) -> f(get(c.context))
 NO_ACTION = c -> nothing
 
 
 function make_scope(verify, before, after)
 
-    function scope(f, states::State...)
+    function scope(f, attributes::Attribute...)
 
-        # stable sort, respecting user where possible
-        s = sort!([states...], by=s -> s.rank, alg=InsertionSort)
         c = thread_context
-        
-        # save context if it exists
         saved = false
-        if c.scope[end] != SCOPE_NONE
-            X.save(get(c.context))
-            saved = true
-        end
+        verified = false
 
-        # check for exclusive conflicts and set scope
-        verify(c, s)
+        try
 
-        for state in s
-            for b in state.before
-                b(c, state)
-            end
-            # or save as soon as we have a context (first thing that happens)
-            if !saved
+            # stable sort, respecting user where possible
+            a = sort!([attributes...], by=a -> a.rank, alg=InsertionSort)
+                
+            # save context if it exists
+            if c.scope[end] != SCOPE_NONE
                 X.save(get(c.context))
                 saved = true
             end
-        end
-
-        before(get(c.context))
-
-        f()
-
-        after(get(c.context))
-
-        for state in reverse(s)
-            for a in state.after
-                a(c, state)
+            
+            # check for exclusive conflicts and set scope
+            verify(c, a)
+            verified = true
+            
+            for attribute in a
+                for x in attribute.before
+                    x(c, attribute)
+                end
+                # or save as soon as we have a context (first thing that happens)
+                if !saved
+                    X.save(get(c.context))
+                    saved = true
+                end
             end
-        end
+            
+            before(get(c.context))
+            
+            f()
+            
+            after(get(c.context))
+            
+            for attribute in reverse(a)
+                for x in attribute.after
+                    x(c, attribute)
+                end
+            end
+            
+        finally
 
-        pop!(c.scope)
-        if c.scope[end] != SCOPE_NONE
-            X.restore(get(c.context))
+            verified && pop!(c.scope)
+            if c.scope[end] == SCOPE_NONE
+                c.context = NullableContext()
+            else
+                saved && X.restore(get(c.context))
+            end
+            
         end
-        
     end
 end
-
 
 
 # --- scopes
@@ -133,13 +143,27 @@ end
 stroke = with_current_point(X.stroke)
 fill = with_current_point(X.fill)
 
-function verify(c,s)
-    push!(c.scope, SCOPE_WITH)
+function verify_bootstrap(c, a)
+    if c.scope[end] == SCOPE_NONE && (length(a) == 0 || a[1].rank != RANK_BOOTSTRAP)
+        splice!(a, 1:0, [Paper()])
+    end
 end
 
-with = make_scope(verify, NO_ACTION, NO_ACTION)
-draw = make_scope(verify, NO_ACTION, stroke)
-paint = make_scope(verify, NO_ACTION, fill)
+function verify_nesting(c, a)
+    @assert c.scope[end] != SCOPE_ACTION "Cannot nest a scope inside an action scope"
+end
+
+function make_verify(scope)
+    function verify(c, a)
+        verify_bootstrap(c, a)
+        verify_nesting(c, a)
+        push!(c.scope, scope)
+    end
+end
+
+with = make_scope(make_verify(SCOPE_WITH), NO_ACTION, NO_ACTION)
+draw = make_scope(make_verify(SCOPE_ACTION), NO_ACTION, stroke)
+paint = make_scope(make_verify(SCOPE_ACTION), NO_ACTION, fill)
 
 
 
@@ -165,11 +189,14 @@ const PORTRAIT = Orientation(2)
 function Paper(nx::Int, ny::Int; background="white", border=0.1::Float64,
                centred=false::Bool)
     bg = parse_color(background)
-    State("Paper", RANK_BOOTSTRAP,
-          [(c, s) -> c.context = X.CairoContext(X.CairoRGBSurface(nx, ny)),
-           ctx(c -> set_background(c, nx, ny, bg)),
-           ctx(c -> set_coords(c, nx, ny, border, centred))],
-          [(c, s) -> c.context = NullableContext()])
+    Attribute("Paper", RANK_BOOTSTRAP,
+              vcat([(c, a) -> c.context = X.CairoContext(X.CairoRGBSurface(nx, ny)),
+                    ctx(c -> set_background(c, nx, ny, bg)),
+                    ctx(c -> set_coords(c, nx, ny, border, centred))],
+                   # default foreground and pen
+                   Ink().before,
+                   Pen().before),
+              [(c, a) -> c.context = NullableContext()])
 end
 
 function Paper(size::AbstractString; dpi=300::Int, background="white", 
@@ -194,7 +221,6 @@ end
 function set_background(c, nx, ny, bg)
     X.save(c)
     X.rectangle(c, 0, 0, nx, ny)
-    println(bg)
     X.set_source(c, bg)
     X.fill(c)
     X.restore(c)
@@ -227,7 +253,7 @@ Paper() = Paper("a4")
 # --- output (file, display, etc)
 
 function File(path::AbstractString)
-    State("File", RANK_OUTPUT, NO_ACTIONS,
+    Attribute("File", RANK_OUTPUT, NO_ACTIONS,
           [ctx(c -> X.write_to_png(c.surface, path))])
 end
 
@@ -237,16 +263,22 @@ end
 
 function Ink(foreground)
     f = parse_color(foreground)
-    State("Ink", RANK_STATE, [ctx(c -> X.set_source(c, f))], NO_ACTIONS)
+    Attribute("Ink", RANK_STATE, [ctx(c -> X.set_source(c, f))], NO_ACTIONS)
 end
 
-Ink() = Ink("black") 
+RED = parse_color("red")
+GREEN = parse_color("green")
+BLUE = parse_color("blue")
+WHITE = parse_color("white")
+BLACK = parse_color("black")
+
+Ink() = Ink(BLACK) 
 
 
 
 # --- stroke attributes
 
-Pen(width) = State("Pen", RANK_STATE, [ctx(c -> set_width(c, width))], NO_ACTIONS)
+Pen(width) = Attribute("Pen", RANK_STATE, [ctx(c -> set_width(c, width))], NO_ACTIONS)
 
 Pen() = Pen(-1)
 
@@ -268,10 +300,10 @@ end
 
 # --- transforms
 
-Scale(k) = State("Scale", RANK_STATE, [ctx(c -> X.scale(c, k, k))], NO_ACTIONS)
-Scale(x, y) = State("Scale", RANK_STATE, [ctx(c -> X.scale(c, x, y))], NO_ACTIONS)
-Translate(x, y) = State("Translate", RANK_STATE, [ctx(c -> X.translate(c, x, y))], NO_ACTIONS)
-Rotate(d) = State("Rotate", RANK_STATE, [ctx(c -> X.rotate(c, d))], NO_ACTIONS)
+Scale(k) = Attribute("Scale", RANK_STATE, [ctx(c -> X.scale(c, k, k))], NO_ACTIONS)
+Scale(x, y) = Attribute("Scale", RANK_STATE, [ctx(c -> X.scale(c, x, y))], NO_ACTIONS)
+Translate(x, y) = Attribute("Translate", RANK_STATE, [ctx(c -> X.translate(c, x, y))], NO_ACTIONS)
+Rotate(d) = Attribute("Rotate", RANK_STATE, [ctx(c -> X.rotate(c, d))], NO_ACTIONS)
 
 
 

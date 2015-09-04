@@ -98,7 +98,7 @@ only appear in the outermost scope.  The order of state attributes may be
 important (eg the relative order of `Scale()` and `Translate()`) and follows
 the order given in the scope, from left to right.
 
-### Boot Attributes
+### Bootstrap Attributes
 
 `Paper(nx, ny; background="white", border=0.1, centred=false)` initialises a
 Cairo context of the given size (in pixels).  Excluding the border (measured

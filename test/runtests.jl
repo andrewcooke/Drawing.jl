@@ -18,5 +18,13 @@ function compare(name)
     println("ok")
 end    
 
+function axes()
+    move(0,0)
+    line(1,0)
+    move(0,0)
+    line(0,1)
+end
+
 include("basics.jl")
+include("errors.jl")
 include("towers.jl")

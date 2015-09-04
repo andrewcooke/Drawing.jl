@@ -1,29 +1,29 @@
 
-function axes()
-    move(0,0)
-    line(1,0)
-    move(0,0)
-    line(0,1)
+ignore = false  # when re-generating
+
+draw(File("defaults.png")) do
+    axes()
 end
+ignore || compare("defaults.png")
 
 draw(axes, File("portrait.png"), Paper(70, 100; background="lightgrey"))
-compare("portrait.png")
+ignore || compare("portrait.png")
 draw(axes, File("landscape.png"), Paper(100, 70; background="lightgrey"))
-compare("landscape.png")
+ignore || compare("landscape.png")
 
 draw(axes, File("scale.png"), Paper(70, 100; background="lightgrey"), Scale(0.5))
-compare("scale.png")
+ignore || compare("scale.png")
 draw(axes, File("scale2.png"), Paper(70, 100; background="lightgrey"), Scale(0.5, 1.0))
-compare("scale2.png")
+ignore || compare("scale2.png")
 draw(axes, File("translate.png"), Paper(70, 100; background="lightgrey"), Translate(0.1, 0.1))
-compare("translate.png")
+ignore || compare("translate.png")
 draw(axes, File("rotate.png"), Paper(70, 100; background="lightgrey"), Rotate(pi/4))
-compare("rotate.png")
+ignore || compare("rotate.png")
 
 draw(axes, File("centred_portrait.png"), Paper(70, 100; background="lightgrey", centred=true))
-compare("centred_portrait.png")
+ignore || compare("centred_portrait.png")
 draw(axes, File("centred_landscape.png"), Paper(100, 70; background="lightgrey", centred=true))
-compare("centred_landscape.png")
+ignore || compare("centred_landscape.png")
 
 with(File("orange_blue_square.png"), Paper(100, 100), Pen(0.05)) do
     draw(Ink("orange")) do
