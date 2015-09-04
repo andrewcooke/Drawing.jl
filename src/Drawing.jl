@@ -30,15 +30,15 @@ include("cairo.jl")
 
 typealias NullableContext Nullable{X.CairoContext}
 
-const LEVEL_INITIAL = 0
-const LEVEL_COMPOSE = 1
-const LEVEL_PATH = 2
+const SCOPE_NONE = 0
+const SCOPE_WITH = 1
+const SCOPE_ACTION = 2
 
 # this needs to be in a thread local variable once such things exist in julia
 type ThreadContext
     context::NullableContext
-    level::Int
-    ThreadContext() = new(NullableContext(), LEVEL_INITIAL)
+    scope::Vector{Int}
+    ThreadContext() = new(NullableContext(), Int[SCOPE_NONE])
 end
 
 thread_context = ThreadContext()
@@ -58,8 +58,7 @@ type State
     rank::Int
     before::Vector{Function}
     after::Vector{Function}
-    previous_context::NullableContext  # only used at rank 0
-    State(name, rank, before, after) = new(name, rank, before, after, NullableContext())
+    State(name, rank, before, after) = new(name, rank, before, after)
 end
 
 const NO_ACTIONS = Function[]
@@ -75,49 +74,42 @@ function make_scope(verify, before, after)
         s = sort!([states...], by=s -> s.rank, alg=InsertionSort)
         c = thread_context
         
-        # outermost context must define paper
-        initial, saved = isnull(c.context), false
-        if initial
-            if length(s) == 0 || s[1].rank != RANK_BOOTSTRAP
-                s = [Paper(), s...]
-            end
-        else
+        # save context if it exists
+        saved = false
+        if c.scope[end] != SCOPE_NONE
             X.save(get(c.context))
             saved = true
         end
-        
-        # check for exclusive conflicts
-        verify(c)
-        
+
+        # check for exclusive conflicts and set scope
+        verify(c, s)
+
         for state in s
             for b in state.before
                 b(c, state)
             end
-            # save as soon as we have a context
-            if !saved && !isnull(c.context)
+            # or save as soon as we have a context (first thing that happens)
+            if !saved
                 X.save(get(c.context))
                 saved = true
             end
         end
 
         before(get(c.context))
+
         f()
+
         after(get(c.context))
 
         for state in reverse(s)
-            # restore (unsave) before replacing context
-            if initial && state.rank == RANK_BOOTSTRAP && saved
-                X.restore(get(c.context))
-                saved = false
-            end
             for a in state.after
                 a(c, state)
             end
         end
 
-        if saved
+        pop!(c.scope)
+        if c.scope[end] != SCOPE_NONE
             X.restore(get(c.context))
-            saved = false
         end
         
     end
@@ -141,9 +133,13 @@ end
 stroke = with_current_point(X.stroke)
 fill = with_current_point(X.fill)
 
-with = make_scope(NO_ACTION, NO_ACTION, NO_ACTION)
-draw = make_scope(NO_ACTION, NO_ACTION, stroke)
-paint = make_scope(NO_ACTION, NO_ACTION, fill)
+function verify(c,s)
+    push!(c.scope, SCOPE_WITH)
+end
+
+with = make_scope(verify, NO_ACTION, NO_ACTION)
+draw = make_scope(verify, NO_ACTION, stroke)
+paint = make_scope(verify, NO_ACTION, fill)
 
 
 
@@ -170,10 +166,10 @@ function Paper(nx::Int, ny::Int; background="white", border=0.1::Float64,
                centred=false::Bool)
     bg = parse_color(background)
     State("Paper", RANK_BOOTSTRAP,
-          [(c, s) -> (s.previous_context = c.context; c.context = X.CairoContext(X.CairoRGBSurface(nx, ny))),
+          [(c, s) -> c.context = X.CairoContext(X.CairoRGBSurface(nx, ny)),
            ctx(c -> set_background(c, nx, ny, bg)),
            ctx(c -> set_coords(c, nx, ny, border, centred))],
-          NO_ACTIONS)
+          [(c, s) -> c.context = NullableContext()])
 end
 
 function Paper(size::AbstractString; dpi=300::Int, background="white", 

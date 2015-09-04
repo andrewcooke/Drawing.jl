@@ -63,8 +63,8 @@ The API consists of:
 
 1. **Scopes** introduce *attributes*, may include either nested *scopes* or
    *actions*, and may trigger some process (like stroking or filling a path)
-   at the end.  For example, `with()` is a scope that intrduces attributes,
-   but does not trigger any process on closing.
+   at the end.  For example, `draw()` is a scope that introduces attributes,
+   includes actions, and triggers a stroke on closing.
 
 2. **Attributes** modify the Cairo context for the duration of the scope.  For
    example, `Ink()` sets the Cairo source for the scope.
@@ -83,7 +83,11 @@ deep, and includes the attributes `Paper()`, `Ink()`, etc.
 
 * `paint()` defines a scope and, on closing, fills the current path.
 
-There are some constraints on how scopes are nested: TODO
+There are some constraints on how scopes are used:
+
+* The `with()` scope cannot contain actions.
+
+* The `draw()` and `paint()` scopes cannot contain nested scopes.
 
 ## Attributes
 
@@ -96,7 +100,16 @@ the order given in the scope, from left to right.
 
 ### Boot Attributes
 
-TODO
+`Paper(nx, ny; background="white", border=0.1, centred=false)` initialises a
+Cairo context of the given size (in pixels).  Excluding the border (measured
+as a fraction of the smallest side), the coordinate system is either bottom
+left, or centred, and has is scaled so that the smallest axis has unit length.
+
+<img align="left" src="test/target/portrait.png"/>
+<img align="right" src="test/target/centred_landscape.png"/>
+
+Example axes (x is horizontal) for 70x100 pages, with a border of 0.1, where
+the landscape axes are centred.
 
 ### Output Attributes
 
