@@ -113,6 +113,10 @@ clipped to the unit axes area - it can extend over the whole page.
 ![portrait](test/target/portrait.png)
 ![landscape, centred](test/target/centred_landscape.png)
 
+`Paper(size; dpi=300, orientation=LANDSCAPE, background="white", border=0.1,
+centred=false)` intializes a Cairo context as above, but with the pixels sizes
+inferred from the paper size (eg "a4"), dpi and orientation.
+
 ### Output Attributes
 
 TODO
