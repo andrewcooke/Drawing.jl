@@ -30,11 +30,6 @@ In providing a simple API, the package has two important aims:
    context with certain attributes (ink colour, pen width, etc), and then have
    an inner scope that changes a subset of those values.
 
-The design is somewhat experimental (how best to create scopes in Julia?), but
-appears to work well.  The aim is to support a "reasonable subset" of Cairo's
-functionality directly, while providing access to the "raw" Cairo librray if
-needed.
-
 # Example
 
 ```julia
