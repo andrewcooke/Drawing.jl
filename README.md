@@ -51,7 +51,7 @@ with(File("red_blue_square.png"), Paper(100, 100), Ink("red"), Pen(0.1)) do
 end
 ```
 
-<img align="left" src="test/target/red_blue_square.png"/>
+<img align="left" border="10" src="test/target/red_blue_square.png"/>
 
 The default coordinate system is from 0 to 1 (on the shorter axis, origin
 bottom left), with 10% of the space used as a border on each side.  Unlike
@@ -105,8 +105,8 @@ Cairo context of the given size (in pixels).  Excluding the border (measured
 as a fraction of the smallest side), the coordinate system is either bottom
 left, or centred, and has is scaled so that the smallest axis has unit length.
 
-<img align="left" src="test/target/portrait.png"/>
-<img align="right" src="test/target/centred_landscape.png"/>
+<img align="left" border="10" src="test/target/portrait.png"/>
+<img align="right" border="10" src="test/target/centred_landscape.png"/>
 
 Example axes (x is horizontal) for 70x100 pages, with a border of 0.1, where
 the landscape axes are centred.
