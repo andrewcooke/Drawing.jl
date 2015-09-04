@@ -22,7 +22,7 @@ draw(axes, File("rotate.png"), Paper(70, 100; background="lightgrey"), Rotate(pi
 
 draw(axes, File("centred_portrait.png"), Paper(70, 100; background="lightgrey", centred=true))
 #compare("centred_portrait.png")
-draw(axes, File("centred_landscape.png"), Paper(100, 70; background="lightgrey"; centred=true))
+draw(axes, File("centred_landscape.png"), Paper(100, 70; background="lightgrey", centred=true))
 #compare("centred_landscape.png")
 
 with(File("orange_blue_square.png"), Paper(100, 100), Pen(0.05)) do
