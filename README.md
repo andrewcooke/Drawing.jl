@@ -9,7 +9,6 @@
   * [Attributes](#attributes)
   * [Actions](#actions)
 * [Raw Cairo](#raw-cairo)
-* [Omissions / Future Work](#omissions--future-work)
 * [Gallery](#gallery)
 
 # Introduction
@@ -174,13 +173,6 @@ TODO
 # Raw Cairo
 
 TODO
-
-# Omissions / Future Work
-
-* Implement all the things listed in the TODO list in the
-  [source code](src/Drawing.jl).
-
-* Multiple "pages" within a single scope will likely *not* be added.
 
 # Gallery
 
