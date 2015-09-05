@@ -141,7 +141,7 @@ the order given in the scope, from left to right.
   
   [![round/round](test/target/a10-round-round.png)](test/a10-round-round.jl)
   [![butt/mitre](test/target/a10-butt-mitre.png)](test/a10-butt-mitre.jl)
-  [![square/bevel](test/target/a10-square-bevel.png)](test/a10-square-bevel.kl)
+  [![square/bevel](test/target/a10-square-bevel.png)](test/a10-square-bevel.jl)
 
   *Click on image to see associated script.*
 
