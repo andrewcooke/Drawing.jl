@@ -1,5 +1,5 @@
 
-with(File("red_square.png"), Paper(100, 100)) do
+with(File("red-square.png"), Paper(100, 100)) do
     ctx = current_context()
     @test has_current_point(ctx) == false
     move(0.5, 0.5)
