@@ -152,6 +152,8 @@ the order given in the scope, from left to right.
   **Note:** To scale the initial axes to have a range of 0-100, say, use
  `Scale(1/100)` (ie use the reciprocal of the range required).
 
+* `Scale(x. y)` scales the Cairo user coordinates independently in x and y.
+
 * `Translate(x, y)` translates the Cairo user coordinates.  This is a relative
   correction - the same shape (ie the same coordinates) appear shifted by the
   given x and y offsets.
@@ -174,11 +176,15 @@ the order given in the scope, from left to right.
 
 Currently, all actions affect the Cairo path.
 
-TODO
+* `move(x, y)` moves the current point to given point in user coordinates.
+
+* `line(x, y)` creates a straught line path between the currentpoint and the
+  given point, in user coordinates.
 
 # Raw Cairo
 
-TODO
+Arbitrary calls to Cairo can be added as scopes, attributes and actions.  Copy
+from the [source](src/Drawing.jl).
 
 # Gallery
 
