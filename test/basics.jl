@@ -58,6 +58,9 @@ ignore || compare("a10-square-scale.png")
 draw(square, File("a10-square-scale-translate.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, background="lightgrey"), Scale(0.5), Translate(1, 1))
 ignore || compare("a10-square-scale-translate.png")
 
+draw(square, File("a10-rotate.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, background="lightgrey"), Rotate(pi/4))
+ignore || compare("a10-rotate.png")
+
 with(File("orange_blue_square.png"), Paper(100, 100), Pen(0.05)) do
     draw(Ink("orange")) do
         move(0.0, 0.0)

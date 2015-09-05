@@ -142,23 +142,28 @@ the order given in the scope, from left to right.
   ![butt/mitre](test/target/a10-butt-mitre.png)
   ![square/bevel](test/target/a10-square-bevel.png)
 
-* `Scale(factor)` sets the Cairo scale value, modifying user coordinates.
-  This is a relative correction - values smaller than one mean that the same
-  shape (ie the same coordinates) displays a smaller result.
+* `Scale(factor)` scales the Cairo user coordinates.  This is a relative
+  correction - values smaller than one mean that the same shape (ie the same
+  coordinates) displays a smaller result.
 
   **Note:** To scale the initial axes to have a range of 0-100, say, use
  `Scale(1/100)` (ie use the reciprocal of the range required).
 
-* `Translate(x, y)` sets the Cairo translate value, modifying user
-  coordinates.  This is a relative correction - the same shape (ie the same
-  coordinates) appear shifted by the given x and y offsets.
+* `Translate(x, y)` translates the Cairo user coordinates.  This is a relative
+  correction - the same shape (ie the same coordinates) appear shifted by the
+  given x and y offsets.
+
+* `Rotate(angle)` rotates the Cairo user coordinates about the origin.  The
+  angle is measured in radians, anti-clockwise.
 
   Below, the same unit square is plotted (from left to right): in the original
-  axes; after `Scale(0.5)`; after `Scale(0.5), Translate(1, 1)`.
+  axes; after `Scale(0.5)`; after `Scale(0.5), Translate(1, 1)`; after
+  `Rotate(pi/4)`.
 
   ![default](test/target/a10-square.png)
   ![scale](test/target/a10-square-scale.png)
   ![scale+translate](test/target/a10-square-scale-translate.png)
+  ![rotate](test/target/a10-square-rotate.png)
 
 ## Actions
 

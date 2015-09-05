@@ -19,10 +19,10 @@ end
 Base.showerror(io::IO, e::DrawingError) = print(io, e.msg)
 
 # TODO
+# - other output formats
 # - fancy sources
 # - text
 # - curves
-# - other output formats
 # - actions that take lists of points (or generators?)
 
 
