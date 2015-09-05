@@ -20,8 +20,6 @@ Base.showerror(io::IO, e::DrawingError) = print(io, e.msg)
 
 # TODO
 # - composability
-# - defaults if we declare nothing
-# - enforcing scope nesting rules (validation)
 # _ more pen attributes (cap style, mitre, etc)
 # - fancy sources
 # - text
@@ -46,7 +44,7 @@ type ThreadContext
     ThreadContext() = new(NullableContext(), Int[SCOPE_NONE])
 end
 
-thread_context = ThreadContext()
+const thread_context = ThreadContext()
 current_context() = get(thread_context.context)
 
 
@@ -180,6 +178,30 @@ parse_color(c::C.Color) = c
 
 int(x) = round(Int, x)
 
+function make_parser(name, table)
+    function parser(value)
+        v = lowercase(value)
+        if haskey(table, v)
+            table[v]
+        else
+            throw(DrawingError("Unknown $(name): $(value)"))
+        end
+    end
+end
+
+function make_int_parser(name, table)
+    string_parser = make_parser(name, table)
+    function parser(value)
+        if isa(value, Integer)
+            value
+        elseif isa(value, AbstractString)
+            string_parser(value)
+        else
+            throw(DrawingError("Bad type for $(name): $(typeof(value))"))
+        end
+    end
+end
+
 
 
 # --- paper declaration
@@ -200,47 +222,39 @@ function Paper(nx::Int, ny::Int; background="white", border=0.1::Float64,
                     ctx(c -> set_background(c, nx, ny, bg)),
                     ctx(c -> set_coords(c, nx, ny, border, centred))],
                    # default foreground and pen
-                   Ink().before,
-                   Pen().before),
+                   Ink(BLACK).before,
+                   Pen(0.02; cap=X.CAIRO_LINE_CAP_ROUND, join=X.CAIRO_LINE_JOIN_ROUND).before),
               [(c, a) -> c.context = NullableContext()])
 end
 
 function Paper(size::AbstractString; dpi=300::Int, background="white", 
                orientation=LANDSCAPE::Orientation, border=0.1::Float64,
                centred=false::Bool)
-    nx, ny = map(int, dpi * paper_size(size) / 25.4)
+    nx, ny = map(int, dpi * parse_paper_size(size) / 25.4)
     if orientation == LANDSCAPE
         nx, ny = ny, nx
     end
     Paper(nx, ny; background=background, border=border, centred=centred)
 end
 
-PAPER_SIZES = Dict("a0" => [841, 1189],
-                   "a1" => [594, 841],
-                   "a2" => [420, 594],
-                   "a3" => [297, 420],
-                   "a4" => [210, 297],
-                   "a5" => [148, 210],
-                   "a6" => [105, 148],
-                   "a7" => [74, 105],
-                   "a8" => [52, 74],
-                   "a9" => [37, 52],
-                   "a10" => [26, 37],
-                   "letter" => [216, 279],
-                   "legal" => [216, 356],
-                   "junior" => [127, 203],
-                   "ledger" => [279, 432])
-                   
-
 # these should be as portrait, in mm (x, y)
-function paper_size(size::AbstractString)
-    s = lowercase(size)
-    if haskey(PAPER_SIZES, s)
-        PAPER_SIZES[s]
-    else
-        throw(DrawingError("Unknown paper size: $(size)"))
-    end
-end
+const PAPER_SIZES = Dict("a0" => [841, 1189],
+                         "a1" => [594, 841],
+                         "a2" => [420, 594],
+                         "a3" => [297, 420],
+                         "a4" => [210, 297],
+                         "a5" => [148, 210],
+                         "a6" => [105, 148],
+                         "a7" => [74, 105],
+                         "a8" => [52, 74],
+                         "a9" => [37, 52],
+                         "a10" => [26, 37],
+                         "letter" => [216, 279],
+                         "legal" => [216, 356],
+                         "junior" => [127, 203],
+                         "ledger" => [279, 432])
+                         
+parse_paper_size = make_parser("paper size", PAPER_SIZES)                   
 
 function set_background(c, nx, ny, bg)
     X.save(c)
@@ -296,29 +310,38 @@ BLUE = parse_color("blue")
 WHITE = parse_color("white")
 BLACK = parse_color("black")
 
-Ink() = Ink(BLACK) 
-
 
 
 # --- stroke attributes
 
-Pen(width) = Attribute("Pen", RANK_STATE, [ctx(c -> set_width(c, width))], NO_ACTIONS)
+function Pen(width; cap=nothing, join=nothing)
+    Attribute("Pen", RANK_STATE, 
+              vcat(width >= 0 ? [ctx(c -> set_width(c, width))] : [],
+                   cap != nothing ? [ctx(c -> X.set_line_cap(c, parse_line_cap(cap)))] : [],
+                   join != nothing ? [ctx(c -> X.set_line_join(c, parse_line_join(cap)))] : []),
+              NO_ACTIONS)
+end
 
-Pen() = Pen(-1)
+Pen(; cap=X.CAIRO_LINE_CAP_ROUND, join=X.CAIRO_LINE_JOIN_ROUND) = Pen(-1; cap=cap, join=join)
 
 function set_width(c, width)
-    if width >= 0
-        # width is in user coords, so scale to device coords
-        v = [width, width]
-        X.user_to_device_distance!(c, v)
-        w = maximum(map(abs, v))
-        X.set_line_width(c, w)
-    else
-        # use 2% of smaller dimension
-        d = min(c.surface.width, c.surface.height)
-        X.set_line_width(c, d * 0.02)
-    end
+    # width is in user coords, so scale to device coords
+    v = [width, width]
+    X.user_to_device_distance!(c, v)
+    v = map(abs, v)
+    X.set_line_width(c, sum(v)/2)
 end
+
+const LINE_CAPS = Dict("butt" => X.CAIRO_LINE_CAP_BUTT,
+                       "round" => X.CAIRO_LINE_CAP_ROUND,
+                       "square" => X.CAIRO_LINE_CAP_SQUARE)
+parse_line_cap = make_int_parser("line cap", LINE_CAPS)
+
+LINE_JOINS = Dict("mitre" => X.CAIRO_LINE_JOIN_MITER,
+                  "miter" => X.CAIRO_LINE_JOIN_MITER,
+                  "round" => X.CAIRO_LINE_JOIN_ROUND,
+                  "bevel" => X.CAIRO_LINE_JOIN_BEVEL)
+parse_line_join = make_int_parser("line join", LINE_JOINS)
 
 
 

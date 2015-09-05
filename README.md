@@ -121,7 +121,7 @@ the order given in the scope, from left to right.
 ### State Attributes
 
 * `Ink(colour)` sets the Cairo source (ie the colour used to draw or paint).
-  The colour can be a `Color` (see the Colors.jl package) or string (eg "red",
+  The colour can be a `Color` (see the Colors.jl package) or string ("red",
   "blue", etc).
 
 * `Pen()`
