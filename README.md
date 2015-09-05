@@ -124,7 +124,12 @@ the order given in the scope, from left to right.
   The colour can be a `Color` (see the Colors.jl package) or string ("red",
   "blue", etc).
 
-* `Pen()`
+* `Pen(width; cap=..., join=...)` sets the stroke properties (width is in user
+  units, cap and join can be strings or constants from the Cairo.jl package).
+  Omitted values are unchanged.
+
+* `Pen(; cap=..., join=...)` as above, but allows width to be omitted (in
+  which case the previous value is used).
 
 ## Actions
 
