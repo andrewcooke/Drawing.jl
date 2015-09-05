@@ -99,10 +99,10 @@ the order given in the scope, from left to right.
   left, or centred, and is scaled uniformly (assuming square pixels), so that
   the smallest axis has unit length.
 
-  Below, example unit axes (x is horizontal) for 100x140 pages, with a border
-  of 0.1 (ie 10 pixels), where the landscape axes are centred.  Note that
-  drawing is not clipped to the unit axes area - it can extend over the whole
-  page.
+  Below, example unit axes (x is horizontal) for 100x140 pixel images, with a
+  border of 0.1 (ie 10 pixels), where the landscape axes are centred.  Note
+  that drawing is not clipped to the unit axes area - it can extend over the
+  whole page.
 
   ![portrait](test/target/portrait.png)
   ![landscape, centred](test/target/centred_landscape.png)
