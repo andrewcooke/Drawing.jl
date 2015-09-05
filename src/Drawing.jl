@@ -19,14 +19,11 @@ end
 Base.showerror(io::IO, e::DrawingError) = print(io, e.msg)
 
 # TODO
-# - composability
-# _ more pen attributes (cap style, mitre, etc)
 # - fancy sources
 # - text
 # - curves
-# - docs, docs, docs
 # - other output formats
-# - actins that take lists of points (or generators?)
+# - actions that take lists of points (or generators?)
 
 
 # --- global / thread-local state
@@ -206,9 +203,12 @@ end
 
 # --- paper declaration
 
-immutable Orientation enumeration end
-const LANDSCAPE = Orientation(1)
-const PORTRAIT = Orientation(2)
+const LANDSCAPE = 1
+const PORTRAIT = 2
+
+const ORIENTATIONS = Dict("landscape" => LANDSCAPE,
+                          "porttrait" => PORTRAIT)
+parse_orientation = make_int_parser("orientation", ORIENTATIONS)
 
 # it's OK (necessary, even) for this to have non-null defaults, because it's
 # setting up a completely new context (unlike other scopes, which are simply
@@ -228,10 +228,10 @@ function Paper(nx::Int, ny::Int; background="white", border=0.1::Float64,
 end
 
 function Paper(size::AbstractString; dpi=300::Int, background="white", 
-               orientation=LANDSCAPE::Orientation, border=0.1::Float64,
+               orientation=LANDSCAPE, border=0.1::Float64,
                centred=false::Bool)
     nx, ny = map(int, dpi * parse_paper_size(size) / 25.4)
-    if orientation == LANDSCAPE
+    if parse_orientation(orientation) == LANDSCAPE
         nx, ny = ny, nx
     end
     Paper(nx, ny; background=background, border=border, centred=centred)
@@ -314,11 +314,22 @@ BLACK = parse_color("black")
 
 # --- stroke attributes
 
+const LINE_CAPS = Dict("butt" => X.CAIRO_LINE_CAP_BUTT,
+                       "round" => X.CAIRO_LINE_CAP_ROUND,
+                       "square" => X.CAIRO_LINE_CAP_SQUARE)
+parse_line_cap = make_int_parser("line cap", LINE_CAPS)
+
+LINE_JOINS = Dict("mitre" => X.CAIRO_LINE_JOIN_MITER,
+                  "miter" => X.CAIRO_LINE_JOIN_MITER,
+                  "round" => X.CAIRO_LINE_JOIN_ROUND,
+                  "bevel" => X.CAIRO_LINE_JOIN_BEVEL)
+parse_line_join = make_int_parser("line join", LINE_JOINS)
+
 function Pen(width; cap=nothing, join=nothing)
     Attribute("Pen", RANK_STATE, 
               vcat(width >= 0 ? [ctx(c -> set_width(c, width))] : [],
                    cap != nothing ? [ctx(c -> X.set_line_cap(c, parse_line_cap(cap)))] : [],
-                   join != nothing ? [ctx(c -> X.set_line_join(c, parse_line_join(cap)))] : []),
+                   join != nothing ? [ctx(c -> X.set_line_join(c, parse_line_join(join)))] : []),
               NO_ACTIONS)
 end
 
@@ -331,17 +342,6 @@ function set_width(c, width)
     v = map(abs, v)
     X.set_line_width(c, sum(v)/2)
 end
-
-const LINE_CAPS = Dict("butt" => X.CAIRO_LINE_CAP_BUTT,
-                       "round" => X.CAIRO_LINE_CAP_ROUND,
-                       "square" => X.CAIRO_LINE_CAP_SQUARE)
-parse_line_cap = make_int_parser("line cap", LINE_CAPS)
-
-LINE_JOINS = Dict("mitre" => X.CAIRO_LINE_JOIN_MITER,
-                  "miter" => X.CAIRO_LINE_JOIN_MITER,
-                  "round" => X.CAIRO_LINE_JOIN_ROUND,
-                  "bevel" => X.CAIRO_LINE_JOIN_BEVEL)
-parse_line_join = make_int_parser("line join", LINE_JOINS)
 
 
 

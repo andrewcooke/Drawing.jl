@@ -99,9 +99,10 @@ the order given in the scope, from left to right.
   left, or centred, and is scaled uniformly (assuming square pixels), so that
   the smallest axis has unit length.
 
-  Example unit axes (x is horizontal) for 70x100 pages, with a border of 0.1
-  (ie 7 pixels), where the landscape axes are centred.  Note that drawing is
-  not clipped to the unit axes area - it can extend over the whole page.
+  Below, example unit axes (x is horizontal) for 70x100 pages, with a border
+  of 0.1 (ie 7 pixels), where the landscape axes are centred.  Note that
+  drawing is not clipped to the unit axes area - it can extend over the whole
+  page.
 
   ![portrait](test/target/portrait.png)
   ![landscape, centred](test/target/centred_landscape.png)
@@ -124,12 +125,22 @@ the order given in the scope, from left to right.
   The colour can be a `Color` (see the Colors.jl package) or string ("red",
   "blue", etc).
 
-* `Pen(width; cap=..., join=...)` sets the stroke properties (width is in user
-  units, cap and join can be strings or constants from the Cairo.jl package).
-  Omitted values are unchanged.
+* `Pen(width; cap=..., join=...)` sets the stroke properties (cap and join can
+  be strings or constants from the Cairo.jl package).  Omitted values are
+  unchanged.
+
+  **Note:** pen width is in user units, but does not change if the `Scale()`
+  is used *afterwards*.
 
 * `Pen(; cap=..., join=...)` as above, but allows width to be omitted (in
   which case the previous value is used).
+
+  Below, example lines with cap/join (from left to right) of round/round,
+  butt/mitre, square/bevel.
+  
+  ![round/round](test/target/a10-round-round.png)
+  ![butt/mitre](test/target/a10-butt-mitre.png)
+  ![square/bevel](test/target/a10-square-bevel.png)
 
 ## Actions
 
