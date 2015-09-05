@@ -1,5 +1,5 @@
 
-ignore = true  # when re-generating
+ignore = false  # when re-generating
 
 draw(File("defaults.png")) do
     axes()
