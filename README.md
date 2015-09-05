@@ -103,8 +103,10 @@ the order given in the scope, from left to right.
   that drawing is not clipped to the unit axes area - it can extend over the
   whole page.
 
-  [![portrait](test/target/portrait.png)](test/runtests.jl)
-  ![landscape, centred](test/target/centred_landscape.png)
+  [![portrait](test/target/portrait.png)](test/portrait.jl)
+  [![landscape, centred](test/target/centred_landscape.png)](test/centred-landscape.jl)
+
+  *Click on image to see associated script.*
 
 * `Paper(size; dpi=300, orientation=LANDSCAPE, background="white", border=0.1,
   centred=false)` intializes a Cairo context as above, but with the pixel
@@ -141,6 +143,8 @@ the order given in the scope, from left to right.
   ![butt/mitre](test/target/a10-butt-mitre.png)
   ![square/bevel](test/target/a10-square-bevel.png)
 
+  *Click on image to see associated script.*
+
 * `Scale(factor)` scales the Cairo user coordinates.  This is a relative
   correction - values smaller than one mean that the same shape (ie the same
   coordinates) displays a smaller result.
@@ -163,6 +167,8 @@ the order given in the scope, from left to right.
   ![scale](test/target/a10-square-scale.png)
   ![scale+translate](test/target/a10-square-scale-translate.png)
   ![rotate](test/target/a10-square-rotate.png)
+
+  *Click on image to see associated script.*
 
 ## Actions
 

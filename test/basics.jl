@@ -6,10 +6,12 @@ draw(File("defaults.png")) do
 end
 ignore || compare("defaults.png")
 
-draw(axes, File("portrait.png"), Paper(100, 140; background="lightgrey"))
+#draw(axes, File("portrait.png"), Paper(100, 140; background="lightgrey"))
+include("portrait.jl")
 ignore || compare("portrait.png")
 draw(axes, File("landscape.png"), Paper(140, 100; background="lightgrey"))
 ignore || compare("landscape.png")
+
 
 draw(axes, File("scale.png"), Paper(100, 140; background="lightgrey"), Scale(0.5))
 ignore || compare("scale.png")
@@ -20,10 +22,11 @@ ignore || compare("translate.png")
 draw(axes, File("rotate.png"), Paper(100, 140; background="lightgrey"), Rotate(pi/4))
 ignore || compare("rotate.png")
 
-draw(axes, File("centred_portrait.png"), Paper(100, 140; background="lightgrey", centred=true))
-ignore || compare("centred_portrait.png")
-draw(axes, File("centred_landscape.png"), Paper(140, 100; background="lightgrey", centred=true))
-ignore || compare("centred_landscape.png")
+draw(axes, File("centred-portrait.png"), Paper(100, 140; background="lightgrey", centred=true))
+ignore || compare("centred-portrait.png")
+#draw(axes, File("centred-landscape.png"), Paper(140, 100; background="lightgrey", centred=true))
+include("centred-landscape.jl")
+ignore || compare("centred-landscape.png")
 
 function wiggle()
     move(0,0)
@@ -61,7 +64,7 @@ ignore || compare("a10-square-scale-translate.png")
 draw(square, File("a10-square-rotate.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, background="lightgrey"), Rotate(pi/4))
 ignore || compare("a10-square-rotate.png")
 
-with(File("orange_blue_square.png"), Paper(100, 100), Pen(0.05)) do
+with(File("orange-blue-square.png"), Paper(100, 100), Pen(0.05)) do
     draw(Ink("orange")) do
         move(0.0, 0.0)
         line(1.0, 0.0)
@@ -72,9 +75,9 @@ with(File("orange_blue_square.png"), Paper(100, 100), Pen(0.05)) do
         line(0.0, 0.0)
     end
 end
-ignore || compare("orange_blue_square.png")
+ignore || compare("orange-blue-square.png")
 
-with(File("red_blue_square.png"), Paper(100, 100), Ink("red"), Pen(0.1)) do
+with(File("red-blue-square.png"), Paper(100, 100), Ink("red"), Pen(0.1)) do
     draw(Ink("blue")) do
         move(0.0, 0.0)
         line(1.0, 0.0)
@@ -85,5 +88,5 @@ with(File("red_blue_square.png"), Paper(100, 100), Ink("red"), Pen(0.1)) do
         line(0.0, 0.0)
     end
 end
-ignore || compare("red_blue_square.png")
+ignore || compare("red-blue-square.png")
 
