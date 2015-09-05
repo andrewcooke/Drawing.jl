@@ -110,6 +110,9 @@ the order given in the scope, from left to right.
   centred=false)` intializes a Cairo context as above, but with the pixel
   sizes inferred from the paper size (eg "a4"), dpi and orientation.
 
+* `Paper()` initializes a Cairo context with "a4" sized paper, using the
+  default values above.
+
 ### Output Attributes
 
 TODO
