@@ -13,7 +13,7 @@
 
 # Introduction
 
-A library for drawing (diagrams, lines, shapes).
+A library for easy, extensible, drawing (diagrams, lines, shapes).
 
 In other words: simple, imperative vector graphics; a wrapper around Cairo;
 an interface similar to Processing.  For a declarative approach, see
