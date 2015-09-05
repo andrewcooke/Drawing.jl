@@ -5,13 +5,18 @@ import Cairo; const X = Cairo
 import Graphics; const G = Graphics
 import Colors; const C = Colors
 
-export has_current_point, get_current_point, 
+export DrawingError, has_current_point, get_current_point, 
        current_context,
        with, draw, paint,
        Paper, File, Pen, Ink, Scale, Translate, Rotate,
        move, line
 
 include("cairo.jl")
+
+type DrawingError <: Exception 
+    msg::AbstractString
+end
+Base.showerror(io::IO, e::DrawingError) = print(io, e.msg)
 
 # TODO
 # - composability
@@ -150,7 +155,9 @@ function verify_bootstrap(c, a)
 end
 
 function verify_nesting(c, a)
-    @assert c.scope[end] != SCOPE_ACTION "Cannot nest a scope inside an action scope"
+    if c.scope[end] == SCOPE_ACTION 
+        throw(DrawingError("Cannot nest a scope inside an action scope"))
+    end
 end
 
 function make_verify(scope)
@@ -209,12 +216,30 @@ function Paper(size::AbstractString; dpi=300::Int, background="white",
     Paper(nx, ny; background=background, border=border, centred=centred)
 end
 
+PAPER_SIZES = Dict("a0" => [841, 1189],
+                   "a1" => [594, 841],
+                   "a2" => [420, 594],
+                   "a3" => [297, 420],
+                   "a4" => [210, 297],
+                   "a5" => [148, 210],
+                   "a6" => [105, 148],
+                   "a7" => [74, 105],
+                   "a8" => [52, 74],
+                   "a9" => [37, 52],
+                   "a10" => [26, 37],
+                   "letter" => [216, 279],
+                   "legal" => [216, 356],
+                   "junior" => [127, 203],
+                   "ledger" => [279, 432])
+                   
+
 # these should be as portrait, in mm (x, y)
 function paper_size(size::AbstractString)
-    if lowercase(size) == "a4"
-        [210,297]
+    s = lowercase(size)
+    if haskey(PAPER_SIZES, s)
+        PAPER_SIZES[s]
     else
-        throw(ValueError("unknown paper size: $(size)"))
+        throw(DrawingError("Unknown paper size: $(size)"))
     end
 end
 

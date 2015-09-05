@@ -115,7 +115,8 @@ the order given in the scope, from left to right.
 
 ### Output Attributes
 
-TODO
+* `File(path)` writes the final drawing to the given path.  The format is
+  inferred from the file extension.
 
 ### State Attributes
 
