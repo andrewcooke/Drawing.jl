@@ -1,5 +1,5 @@
 
-ignore = false  # when re-generating
+ignore = true  # when re-generating
 
 draw(File("defaults.png")) do
     axes()
@@ -40,6 +40,23 @@ ignore || compare("a10-butt-mitre.png")
 
 draw(wiggle, File("a10-square-bevel.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.2, background="lightgrey"), Scale(100), Pen(0.003, cap="square", join="bevel"))
 ignore || compare("a10-square-bevel.png")
+
+function square()
+    move(0, 0)
+    line(1, 0)
+    line(1, 1)
+    line(0, 1)
+    line(0, 0)
+end
+
+draw(square, File("a10-square.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, background="lightgrey"))
+ignore || compare("a10-square.png")
+
+draw(square, File("a10-square-scale.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, background="lightgrey"), Scale(0.5))
+ignore || compare("a10-square-scale.png")
+
+draw(square, File("a10-square-scale-translate.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, background="lightgrey"), Scale(0.5), Translate(1, 1))
+ignore || compare("a10-square-scale-translate.png")
 
 with(File("orange_blue_square.png"), Paper(100, 100), Pen(0.05)) do
     draw(Ink("orange")) do

@@ -125,9 +125,9 @@ the order given in the scope, from left to right.
   The colour can be a `Color` (see the Colors.jl package) or string ("red",
   "blue", etc).
 
-* `Pen(width; cap=..., join=...)` sets the stroke properties (cap and join can
-  be strings or constants from the Cairo.jl package).  Omitted values are
-  unchanged.
+* `Pen(width; cap=..., join=...)` sets the Cairo stroke properties (cap and
+  join can be strings or constants from the Cairo.jl package).  Omitted values
+  are unchanged.
 
   **Note:** pen width is in user units, but does not change if `Scale()` is
   used *afterwards*.
@@ -142,7 +142,20 @@ the order given in the scope, from left to right.
   ![butt/mitre](test/target/a10-butt-mitre.png)
   ![square/bevel](test/target/a10-square-bevel.png)
 
-* 
+* `Scale(factor)` sets the Cairo scale, modifying user coordinates.  This is a
+  relative correction - values smaller than one mean that the same shape (ie
+  the same coordinates) displays a smaller result.
+
+* `Translate(x, y)` sets the Cairo translate, modifying user coordinates.
+  This is a relative correction - the same shape (ie the same coordinates)
+  appear shifted by the given x and y offsets.
+
+  Below, the same unit square is plotted (from left to right): in the original
+  axes; after `Scale(0.5)`; after `Scale(0.5), Translate(1, 1)`.
+
+  ![default](test/target/a10-square.png)
+  ![scale](test/target/a10-square-scale.png)
+  ![scale+translate](test/target/a10-square-shift-translate.png)
 
 ## Actions
 
