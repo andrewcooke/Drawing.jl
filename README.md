@@ -139,9 +139,9 @@ the order given in the scope, from left to right.
   Below, example lines with cap/join (from left to right) of round/round,
   butt/mitre, square/bevel.
   
-  ![round/round](test/target/a10-round-round.png)
-  ![butt/mitre](test/target/a10-butt-mitre.png)
-  ![square/bevel](test/target/a10-square-bevel.png)
+  [![round/round](test/target/a10-round-round.png)](test/a10-round-round.jl)
+  [![butt/mitre](test/target/a10-butt-mitre.png)](test/a10-butt-mitre.jl)
+  [![square/bevel](test/target/a10-square-bevel.png)](test/a10-square-bevel.kl)
 
   *Click on image to see associated script.*
 

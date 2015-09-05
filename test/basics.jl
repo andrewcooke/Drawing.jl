@@ -28,20 +28,23 @@ ignore || compare("centred-portrait.png")
 include("centred-landscape.jl")
 ignore || compare("centred-landscape.png")
 
-function wiggle()
-    move(0,0)
-    line(0.005, 0)
-    line(0.005, 0.005)
-    line(0.01, 0.01)
-end
+#function wiggle()
+#    move(0,0)
+#    line(0.005, 0)
+#    line(0.005, 0.005)
+#    line(0.01, 0.01)
+#end
 
-draw(wiggle, File("a10-round-round.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.2, background="lightgrey"), Scale(100), Pen(0.003, cap="round", join="round"))
+#draw(wiggle, File("a10-round-round.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.2, background="lightgrey"), Scale(100), Pen(0.003, cap="round", join="round"))
+include("a10-round-round.jl")
 ignore || compare("a10-round-round.png")
 
-draw(wiggle, File("a10-butt-mitre.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.2, background="lightgrey"), Scale(100), Pen(0.003, cap="butt", join="mitre"))
+#draw(wiggle, File("a10-butt-mitre.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.2, background="lightgrey"), Scale(100), Pen(0.003, cap="butt", join="mitre"))
+include("a10-butt-mitre.png")
 ignore || compare("a10-butt-mitre.png")
 
-draw(wiggle, File("a10-square-bevel.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.2, background="lightgrey"), Scale(100), Pen(0.003, cap="square", join="bevel"))
+#draw(wiggle, File("a10-square-bevel.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.2, background="lightgrey"), Scale(100), Pen(0.003, cap="square", join="bevel"))
+include("a10-square-bevel.jl")
 ignore || compare("a10-square-bevel.png")
 
 function square()
