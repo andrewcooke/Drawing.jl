@@ -40,31 +40,35 @@ include("a10-round-round.jl")
 ignore || compare("a10-round-round.png")
 
 #draw(wiggle, File("a10-butt-mitre.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.2, background="lightgrey"), Scale(100), Pen(0.003, cap="butt", join="mitre"))
-include("a10-butt-mitre.png")
+include("a10-butt-mitre.jl")
 ignore || compare("a10-butt-mitre.png")
 
 #draw(wiggle, File("a10-square-bevel.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.2, background="lightgrey"), Scale(100), Pen(0.003, cap="square", join="bevel"))
 include("a10-square-bevel.jl")
 ignore || compare("a10-square-bevel.png")
 
-function square()
-    move(0, 0)
-    line(1, 0)
-    line(1, 1)
-    line(0, 1)
-    line(0, 0)
-end
+#function square()
+#    move(0, 0)
+#    line(1, 0)
+#    line(1, 1)
+#    line(0, 1)
+#    line(0, 0)
+#end
 
-draw(square, File("a10-square.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, background="lightgrey"))
+#draw(square, File("a10-square.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, background="lightgrey"))
+include("a10-square.jl")
 ignore || compare("a10-square.png")
 
-draw(square, File("a10-square-scale.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, background="lightgrey"), Scale(0.5))
+#draw(square, File("a10-square-scale.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, background="lightgrey"), Scale(0.5))
+include("a10-square-scale.jl")
 ignore || compare("a10-square-scale.png")
 
-draw(square, File("a10-square-scale-translate.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, background="lightgrey"), Scale(0.5), Translate(1, 1))
+#draw(square, File("a10-square-scale-translate.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, background="lightgrey"), Scale(0.5), Translate(1, 1))
+include("a10-square-scale-translate.jl")
 ignore || compare("a10-square-scale-translate.png")
 
-draw(square, File("a10-square-rotate.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, background="lightgrey"), Rotate(pi/4))
+#draw(square, File("a10-square-rotate.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, background="lightgrey"), Rotate(pi/4))
+include("a10-square-rotate.jl")
 ignore || compare("a10-square-rotate.png")
 
 with(File("orange-blue-square.png"), Paper(100, 100), Pen(0.05)) do

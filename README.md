@@ -163,10 +163,10 @@ the order given in the scope, from left to right.
   axes; after `Scale(0.5)`; after `Scale(0.5), Translate(1, 1)`; after
   `Rotate(pi/4)`.
 
-  ![default](test/target/a10-square.png)
-  ![scale](test/target/a10-square-scale.png)
-  ![scale+translate](test/target/a10-square-scale-translate.png)
-  ![rotate](test/target/a10-square-rotate.png)
+  [![default](test/target/a10-square.png)](test/a10-square.jl)
+  [![scale](test/target/a10-square-scale.png)](test/a10-square-scale.jl)
+  [![scale+translate](test/target/a10-square-scale-translate.png)](test/a10-square-scale-translate.jl)
+  [![rotate](test/target/a10-square-rotate.png)](test/a10-square-rotate.jl)
 
   *Click on image to see associated script.*
 
