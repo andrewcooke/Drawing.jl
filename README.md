@@ -146,6 +146,9 @@ the order given in the scope, from left to right.
   This is a relative correction - values smaller than one mean that the same
   shape (ie the same coordinates) displays a smaller result.
 
+  **Note:** To scale the initial axes to have a range of 0-100, say, use
+ `Scale(1/100)` (ie use the reciprocal of the range required).
+
 * `Translate(x, y)` sets the Cairo translate value, modifying user
   coordinates.  This is a relative correction - the same shape (ie the same
   coordinates) appear shifted by the given x and y offsets.
