@@ -104,7 +104,7 @@ the order given in the scope, from left to right.
   whole page.
 
   [![portrait](test/target/portrait.png)](test/portrait.jl)
-  [![landscape, centred](test/target/centred_landscape.png)](test/centred-landscape.jl)
+  [![landscape, centred](test/target/centred-landscape.png)](test/centred-landscape.jl)
 
   *Click on image to see associated script.*
 
