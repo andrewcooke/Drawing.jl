@@ -45,7 +45,7 @@ with(File("red-blue-square.png"), Paper(100, 100), Ink("red"), Pen(0.1)) do
 end
 ```
 
-[<img align="left" src="test/target/red_blue_square.png"/>](test/red-blue-square.jl)
+[<img align="left" src="test/target/red-blue-square.png"/>](test/red-blue-square.jl)
 
 The default coordinate system is from 0 to 1 (on the shorter axis, origin
 bottom left), with 10% of the space used as a border on each side.  Unlike
