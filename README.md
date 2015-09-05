@@ -155,7 +155,7 @@ the order given in the scope, from left to right.
 
   ![default](test/target/a10-square.png)
   ![scale](test/target/a10-square-scale.png)
-  ![scale+translate](test/target/a10-square-shift-translate.png)
+  ![scale+translate](test/target/a10-square-scale-translate.png)
 
 ## Actions
 
