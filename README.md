@@ -142,13 +142,13 @@ the order given in the scope, from left to right.
   ![butt/mitre](test/target/a10-butt-mitre.png)
   ![square/bevel](test/target/a10-square-bevel.png)
 
-* `Scale(factor)` sets the Cairo scale, modifying user coordinates.  This is a
-  relative correction - values smaller than one mean that the same shape (ie
-  the same coordinates) displays a smaller result.
+* `Scale(factor)` sets the Cairo scale value, modifying user coordinates.
+  This is a relative correction - values smaller than one mean that the same
+  shape (ie the same coordinates) displays a smaller result.
 
-* `Translate(x, y)` sets the Cairo translate, modifying user coordinates.
-  This is a relative correction - the same shape (ie the same coordinates)
-  appear shifted by the given x and y offsets.
+* `Translate(x, y)` sets the Cairo translate value, modifying user
+  coordinates.  This is a relative correction - the same shape (ie the same
+  coordinates) appear shifted by the given x and y offsets.
 
   Below, the same unit square is plotted (from left to right): in the original
   axes; after `Scale(0.5)`; after `Scale(0.5), Translate(1, 1)`.
