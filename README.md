@@ -178,7 +178,7 @@ Currently, all actions affect the Cairo path.
 
 * `move(x, y)` moves the current point to given point in user coordinates.
 
-* `line(x, y)` creates a straught line path between the currentpoint and the
+* `line(x, y)` creates a straught line path between the current point and the
   given point, in user coordinates.
 
 # Raw Cairo
