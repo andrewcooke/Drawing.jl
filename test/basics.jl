@@ -1,28 +1,28 @@
 
-ignore = false  # when re-generating
+ignore = true  # when re-generating
 
 draw(File("defaults.png")) do
     axes()
 end
 ignore || compare("defaults.png")
 
-draw(axes, File("portrait.png"), Paper(70, 100; background="lightgrey"))
+draw(axes, File("portrait.png"), Paper(100, 150; background="lightgrey"))
 ignore || compare("portrait.png")
-draw(axes, File("landscape.png"), Paper(100, 70; background="lightgrey"))
+draw(axes, File("landscape.png"), Paper(150, 100; background="lightgrey"))
 ignore || compare("landscape.png")
 
-draw(axes, File("scale.png"), Paper(70, 100; background="lightgrey"), Scale(0.5))
+draw(axes, File("scale.png"), Paper(100, 150; background="lightgrey"), Scale(0.5))
 ignore || compare("scale.png")
-draw(axes, File("scale2.png"), Paper(70, 100; background="lightgrey"), Scale(0.5, 1.0))
+draw(axes, File("scale2.png"), Paper(100, 150; background="lightgrey"), Scale(0.5, 1.0))
 ignore || compare("scale2.png")
-draw(axes, File("translate.png"), Paper(70, 100; background="lightgrey"), Translate(0.1, 0.1))
+draw(axes, File("translate.png"), Paper(100, 150; background="lightgrey"), Translate(0.1, 0.1))
 ignore || compare("translate.png")
-draw(axes, File("rotate.png"), Paper(70, 100; background="lightgrey"), Rotate(pi/4))
+draw(axes, File("rotate.png"), Paper(100, 150; background="lightgrey"), Rotate(pi/4))
 ignore || compare("rotate.png")
 
-draw(axes, File("centred_portrait.png"), Paper(70, 100; background="lightgrey", centred=true))
+draw(axes, File("centred_portrait.png"), Paper(100, 150; background="lightgrey", centred=true))
 ignore || compare("centred_portrait.png")
-draw(axes, File("centred_landscape.png"), Paper(100, 70; background="lightgrey", centred=true))
+draw(axes, File("centred_landscape.png"), Paper(150, 100; background="lightgrey", centred=true))
 ignore || compare("centred_landscape.png")
 
 function wiggle()
