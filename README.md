@@ -103,7 +103,7 @@ the order given in the scope, from left to right.
   that drawing is not clipped to the unit axes area - it can extend over the
   whole page.
 
-  ![portrait](test/target/portrait.png)
+  [![portrait](test/target/portrait.png)](test/runtests.jl)
   ![landscape, centred](test/target/centred_landscape.png)
 
 * `Paper(size; dpi=300, orientation=LANDSCAPE, background="white", border=0.1,
