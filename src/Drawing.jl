@@ -28,7 +28,6 @@ Base.showerror(io::IO, e::DrawingError) = print(io, e.msg)
 # - curves
 # - docs, docs, docs
 # - other output formats
-# - other paper sizes
 # - actins that take lists of points (or generators?)
 
 
