@@ -125,6 +125,7 @@ function make_scope(verify, before, after)
 
             pushed && pop!(c.scope)
             if c.scope[end] == SCOPE_NONE
+                # TODO - destroy surface?
                 c.context = nothing
                 c.stage = STAGE_VOID
             else
@@ -205,6 +206,9 @@ end
 
 
 # --- output (file, display, etc)
+
+FILES = Dict("png" -> (X.CairoRGBSurface, X.write_to_pgn),
+             "pdf" -> (
 
 function File(path::AbstractString)
     Attribute("File", STAGE_OUTPUT,
