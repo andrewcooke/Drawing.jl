@@ -1,10 +1,11 @@
 
 ignore = false  # when re-generating
 
-draw(File("defaults.png")) do
-    axes()
-end
-ignore || compare("defaults.png")
+# TODO - add Paper if missing
+#draw(File("defaults.png")) do
+#    axes()
+#end
+#ignore || compare("defaults.png")
 
 #draw(axes, File("portrait.png"), Paper(100, 140; background="lightgrey"))
 include("portrait.jl")

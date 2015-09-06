@@ -28,43 +28,49 @@ Base.showerror(io::IO, e::DrawingError) = print(io, e.msg)
 
 # --- global / thread-local state
 
-typealias NullableContext Nullable{X.CairoContext}
+# this is tracked via the stage variable
+typealias Context Union(Void, Function, X.CairoContext)
 
 const SCOPE_NONE = 0
 const SCOPE_WITH = 1
 const SCOPE_ACTION = 2
 
+const STAGE_VOID = 0     # context uninitialized (void)
+const STAGE_OUTPUT = 1   # context has (nx, ny) tuple / attribute that does so
+const STAGE_PAPER = 2    # context created / attribute that does so
+const STAGE_STATE = 3    # attribute that changes state
+
 # this needs to be in a thread local variable once such things exist in julia
 type ThreadContext
-    context::NullableContext
-    scope::Vector{Int}
-    ThreadContext() = new(NullableContext(), Int[SCOPE_NONE])
+    context::Context
+    stage::Int           # used to track context creation
+    scope::Vector{Int}   # used to track scoping rules
+    ThreadContext() = new(nothing, STAGE_VOID, Int[SCOPE_NONE])
 end
 
 const thread_context = ThreadContext()
-current_context() = get(thread_context.context)
+
+function current_context()
+    @assert thread_context.stage >= STAGE_PAPER "Context not initialized"
+    thread_context.context
+end
 
 
 
 # --- scoping infrastructure
 
-const RANK_BOOTSTRAP = 0
-const RANK_OUTPUT = 1
-const RANK_STATE = 2
-
 # before and after are functions of (ThreadContext, Attribute) -> nothing
 type Attribute
     name::AbstractString
-    rank::Int
+    stage::Int
     before::Vector{Function}
     after::Vector{Function}
-    Attribute(name, rank, before, after) = new(name, rank, before, after)
+    Attribute(name, stage, before, after) = new(name, stage, before, after)
 end
 
 const NO_ACTIONS = Function[]
-ctx(f) = (c, a) -> f(get(c.context))
 NO_ACTION = c -> nothing
-
+ctx(f) = (c, a) -> f(c.context)
 
 function make_scope(verify, before, after)
 
@@ -72,39 +78,42 @@ function make_scope(verify, before, after)
 
         c = thread_context
         saved = false
-        verified = false
+        pushed = false
 
         try
 
             # stable sort, respecting user where possible
-            a = sort!([attributes...], by=a -> a.rank, alg=InsertionSort)
+            a = sort!([attributes...], by=a -> a.stage, alg=InsertionSort)
                 
             # save context if it exists
-            if c.scope[end] != SCOPE_NONE
-                X.save(get(c.context))
+            if c.stage >= STAGE_PAPER
+                X.save(c.context)
                 saved = true
             end
             
-            # check for exclusive conflicts and set scope
+            # check for conflicts and push scope
             verify(c, a)
-            verified = true
+            pushed = true
             
             for attribute in a
+                @assert attribute.stage-1 <= c.stage <= attribute.stage 
+                "Incorrect attribute order (missing output or paper attribute?)"
                 for x in attribute.before
                     x(c, attribute)
                 end
-                # or save as soon as we have a context (first thing that happens)
-                if !saved
-                    X.save(get(c.context))
+                c.stage = attribute.stage
+                # or save as soon as we have a context
+                if !saved && c.stage >= STAGE_PAPER
+                    X.save(c.context)
                     saved = true
                 end
             end
             
-            before(get(c.context))
+            before(c.context)
             
             f()
             
-            after(get(c.context))
+            after(c.context)
             
             for attribute in reverse(a)
                 for x in attribute.after
@@ -114,11 +123,12 @@ function make_scope(verify, before, after)
             
         finally
 
-            verified && pop!(c.scope)
+            pushed && pop!(c.scope)
             if c.scope[end] == SCOPE_NONE
-                c.context = NullableContext()
+                c.context = nothing
+                c.stage = STAGE_VOID
             else
-                saved && X.restore(get(c.context))
+                saved && X.restore(c.context)
             end
             
         end
@@ -142,12 +152,6 @@ end
 stroke = with_current_point(X.stroke)
 fill = with_current_point(X.fill)
 
-function verify_bootstrap(c, a)
-    if c.scope[end] == SCOPE_NONE && (length(a) == 0 || a[1].rank != RANK_BOOTSTRAP)
-        splice!(a, 1:0, [Paper()])
-    end
-end
-
 function verify_nesting(c, a)
     if c.scope[end] == SCOPE_ACTION 
         throw(DrawingError("Cannot nest a scope inside an action scope"))
@@ -156,7 +160,6 @@ end
 
 function make_verify(scope)
     function verify(c, a)
-        verify_bootstrap(c, a)
         verify_nesting(c, a)
         push!(c.scope, scope)
     end
@@ -201,6 +204,16 @@ end
 
 
 
+# --- output (file, display, etc)
+
+function File(path::AbstractString)
+    Attribute("File", STAGE_OUTPUT,
+              [(c, a) -> c.context = (nx, ny) -> X.CairoRGBSurface(nx, ny)],
+              [ctx(c -> X.write_to_png(c.surface, path))])
+end
+
+
+
 # --- paper declaration
 
 const LANDSCAPE = 1
@@ -217,14 +230,14 @@ parse_orientation = make_int_parser("orientation", ORIENTATIONS)
 function Paper(nx::Int, ny::Int; background="white", border=0.1::Float64,
                centred=false::Bool)
     bg = parse_color(background)
-    Attribute("Paper", RANK_BOOTSTRAP,
-              vcat([(c, a) -> c.context = X.CairoContext(X.CairoRGBSurface(nx, ny)),
+    Attribute("Paper", STAGE_PAPER,
+              vcat([(c, a) -> c.context = X.CairoContext(c.context(nx, ny)),
                     ctx(c -> set_background(c, nx, ny, bg)),
                     ctx(c -> set_coords(c, nx, ny, border, centred))],
                    # default foreground and pen
                    Ink(BLACK).before,
                    Pen(0.02; cap=X.CAIRO_LINE_CAP_ROUND, join=X.CAIRO_LINE_JOIN_ROUND).before),
-              [(c, a) -> c.context = NullableContext()])
+              NO_ACTIONS)
 end
 
 function Paper(size::AbstractString; dpi=300::Int, background="white", 
@@ -288,20 +301,11 @@ Paper() = Paper("a4")
 
 
 
-# --- output (file, display, etc)
-
-function File(path::AbstractString)
-    Attribute("File", RANK_OUTPUT, NO_ACTIONS,
-          [ctx(c -> X.write_to_png(c.surface, path))])
-end
-
-
-
 # --- source attributes
 
 function Ink(foreground)
     f = parse_color(foreground)
-    Attribute("Ink", RANK_STATE, [ctx(c -> X.set_source(c, f))], NO_ACTIONS)
+    Attribute("Ink", STAGE_STATE, [ctx(c -> X.set_source(c, f))], NO_ACTIONS)
 end
 
 RED = parse_color("red")
@@ -326,7 +330,7 @@ LINE_JOINS = Dict("mitre" => X.CAIRO_LINE_JOIN_MITER,
 parse_line_join = make_int_parser("line join", LINE_JOINS)
 
 function Pen(width; cap=nothing, join=nothing)
-    Attribute("Pen", RANK_STATE, 
+    Attribute("Pen", STAGE_STATE, 
               vcat(width >= 0 ? [ctx(c -> set_width(c, width))] : [],
                    cap != nothing ? [ctx(c -> X.set_line_cap(c, parse_line_cap(cap)))] : [],
                    join != nothing ? [ctx(c -> X.set_line_join(c, parse_line_join(join)))] : []),
@@ -347,10 +351,10 @@ end
 
 # --- transforms
 
-Scale(k) = Attribute("Scale", RANK_STATE, [ctx(c -> X.scale(c, k, k))], NO_ACTIONS)
-Scale(x, y) = Attribute("Scale", RANK_STATE, [ctx(c -> X.scale(c, x, y))], NO_ACTIONS)
-Translate(x, y) = Attribute("Translate", RANK_STATE, [ctx(c -> X.translate(c, x, y))], NO_ACTIONS)
-Rotate(d) = Attribute("Rotate", RANK_STATE, [ctx(c -> X.rotate(c, d))], NO_ACTIONS)
+Scale(k) = Attribute("Scale", STAGE_STATE, [ctx(c -> X.scale(c, k, k))], NO_ACTIONS)
+Scale(x, y) = Attribute("Scale", STAGE_STATE, [ctx(c -> X.scale(c, x, y))], NO_ACTIONS)
+Translate(x, y) = Attribute("Translate", STAGE_STATE, [ctx(c -> X.translate(c, x, y))], NO_ACTIONS)
+Rotate(d) = Attribute("Rotate", STAGE_STATE, [ctx(c -> X.rotate(c, d))], NO_ACTIONS)
 
 
 
