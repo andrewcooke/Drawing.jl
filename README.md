@@ -139,9 +139,9 @@ the order given in the scope, from left to right.
   Below, example lines with cap/join (from left to right) of round/round,
   butt/mitre, square/bevel.
   
-  [![round/round](test/target/a10-round-round.png)](test/a10-round-round.jl)
-  [![butt/mitre](test/target/a10-butt-mitre.png)](test/a10-butt-mitre.jl)
-  [![square/bevel](test/target/a10-square-bevel.png)](test/a10-square-bevel.jl)
+  [![round/round](test/target/round-round.png)](test/round-round.jl)
+  [![butt/mitre](test/target/butt-mitre.png)](test/butt-mitre.jl)
+  [![square/bevel](test/target/square-bevel.png)](test/square-bevel.jl)
 
   *Click on image to see associated script.*
 
@@ -165,10 +165,10 @@ the order given in the scope, from left to right.
   axes; after `Scale(0.5)`; after `Scale(0.5), Translate(1, 1)`; after
   `Rotate(pi/4)`.
 
-  [![default](test/target/a10-square.png)](test/a10-square.jl)
-  [![scale](test/target/a10-square-scale.png)](test/a10-square-scale.jl)
-  [![scale+translate](test/target/a10-square-scale-translate.png)](test/a10-square-scale-translate.jl)
-  [![rotate](test/target/a10-square-rotate.png)](test/a10-square-rotate.jl)
+  [![default](test/target/square.png)](test/square.jl)
+  [![scale](test/target/square-scale.png)](test/square-scale.jl)
+  [![scale+translate](test/target/square-scale-translate.png)](test/square-scale-translate.jl)
+  [![rotate](test/target/square-rotate.png)](test/square-rotate.jl)
 
   *Click on image to see associated script.*
 
