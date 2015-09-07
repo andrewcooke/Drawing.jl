@@ -9,7 +9,7 @@ export DrawingError, has_current_point, get_current_point,
        current_context,
        with, draw, paint,
        cm, mm, in, pts,
-       PNG, PDF, Paper, Coords, Pen, Ink, Scale, Translate, Rotate,
+       PNG, PDF, Paper, Axes, Pen, Ink, Scale, Translate, Rotate,
        move, line
 
 include("cairo.jl")
@@ -30,31 +30,28 @@ Base.showerror(io::IO, e::DrawingError) = print(io, e.msg)
 # --- global / thread-local state
 
 # this is tracked via the stage variable
-typealias Context Union(Void, Function, X.CairoContext)
+typealias Context Nullable{X.CairoContext}
 
 const SCOPE_NONE = 0
 const SCOPE_WITH = 1
 const SCOPE_ACTION = 2
 
-const STAGE_VOID = 0     # context uninitialized (void)
-const STAGE_OUTPUT = 1   # context created with defaults
-const STAGE_PAPER = 2    # paper or axes defined
-const STAGE_STATE = 3    # drawing a=commands issued
+const STAGE_NONE = 0     # context uninitialized
+const STAGE_OUTPUT = 1   # create context (and on exit save file)
+const STAGE_PAPER = 2    # background colour
+const STAGE_AXES = 3     # axis scaling
+const STAGE_DRAW = 4     # general drawing
 
 # this needs to be in a thread local variable once such things exist in julia
 type ThreadContext
     context::Context
     stage::Int           # used to track context creation
     scope::Vector{Int}   # used to track scoping rules
-    ThreadContext() = new(nothing, STAGE_VOID, Int[SCOPE_NONE])
+    ThreadContext() = new(Context(), STAGE_NONE, Int[SCOPE_NONE])
 end
 
 const thread_context = ThreadContext()
-
-function current_context()
-    @assert thread_context.stage >= STAGE_OUTPUT "Context not initialized"
-    thread_context.context
-end
+current_context() = get(thread_context.context)
 
 
 
@@ -71,19 +68,38 @@ end
 
 const NO_ACTIONS = Function[]
 NO_ACTION = c -> nothing
-ctx(f) = (c, a) -> f(c.context)
+ctx(f) = (c, a) -> f(get(c.context))
 
 function save_once(ctx, saved)
     # save context if it exists
-    if !saved && ctx.stage >= STAGE_OUTPUT
-        X.save(ctx.context)
+    if !saved && ctx.stage > STAGE_NONE
+        X.save(get(ctx.context))
         true
     else
         saved
     end
 end
 
-function make_scope(verify, before, after)
+function add_defaults(stage, attributes)
+    i = 1
+    while i <= length(attributes) && stage <= attributes[end].stage
+        if attributes[i].stage == stage
+            stage += 1
+            i += 1
+        elseif attributes[i].stage > stage
+            splice!(attributes, i:i-1, [DEFAULT_ATTRIBUTES[stage]])
+            stage += 1
+        else
+            i += 1
+        end
+    end
+    while stage < STAGE_DRAW
+        push!(attributes, DEFAULT_ATTRIBUTES[stage])
+        stage += 1
+    end
+end
+
+function make_scope(verify_push, before, after)
 
     function scope(f, attributes::Attribute...)
 
@@ -97,24 +113,30 @@ function make_scope(verify, before, after)
 
             # stable sort, respecting user where possible
             a = sort!([attributes...], by=a -> a.stage, alg=InsertionSort)
+            add_defaults(c.stage+1, a)
                 
             # check for conflicts and push scope
-            verify(c, a)
+            verify_push(c, a)
             pushed = true
             
             for attribute in a
+
+                if min(c.stage+1, STAGE_DRAW) != attribute.stage 
+                    throw(DrawingError("Initialization attributes must be in outermost scope."))
+                end
+
                 for x in attribute.before
                     x(c, attribute)
                 end
                 c.stage = attribute.stage
                 saved = save_once(c, saved)
             end
-            
-            before(c.context)
+
+            before(get(c.context))
             
             f()
             
-            after(c.context)
+            after(get(c.context))
             
             for attribute in reverse(a)
                 for x in attribute.after
@@ -127,10 +149,10 @@ function make_scope(verify, before, after)
             pushed && pop!(c.scope)
             
             if c.scope[end] == SCOPE_NONE
-                c.context = nothing
-                c.stage = STAGE_VOID
+                c.context = Context()
+                c.stage = STAGE_NONE
             else
-                saved && X.restore(c.context)
+                saved && X.restore(get(c.context))
             end
             
         end
@@ -138,7 +160,7 @@ function make_scope(verify, before, after)
 end
 
 
-# --- scopes
+# --- actual scopes
 
 function with_current_point(action)
     function (c)
@@ -232,69 +254,46 @@ const PAPER_SIZES = Dict("a0" => [841, 1189],
                          "ledger" => [279, 432])
 parse_paper_size = make_parser("paper size", PAPER_SIZES)                   
 
-RED = parse_color("red")
-GREEN = parse_color("green")
-BLUE = parse_color("blue")
-WHITE = parse_color("white")
-BLACK = parse_color("black")
-
 const LANDSCAPE = 1
 const PORTRAIT = 2
 const ORIENTATIONS = Dict("landscape" => LANDSCAPE,
                           "porttrait" => PORTRAIT)
 parse_orientation = make_int_parser("orientation", ORIENTATIONS)
 
-verify_stage_void(c, a) = @assert c.stage == STAGE_VOID "Context already initialized"
-
-const DEFAULTS = [ctx(c -> set_background(c, WHITE)),
-                  ctx(c -> X.set_source(c, BLACK)),
-                  ctx(c -> set_coords(c, 1, 0.1, false)),
-                  ctx(c -> set_width(c, 0.02)),
-                  ctx(c -> X.set_line_cap(c, X.CAIRO_LINE_CAP_ROUND)),
-                  ctx(c -> X.set_line_join(c, X.CAIRO_LINE_JOIN_ROUND))]
-
 # width and heigh are in mm
-function PDF(path::AbstractString, width_mm, height_mm)
+function PDF(path, width_mm, height_mm)
     Attribute("PDF", STAGE_OUTPUT,
-              vcat([verify_stagre_void,
-                    (c, a) -> c.context = X.CairoContext(X.CairoPDFSurface("formats.pdf", width_mm/pts, height_mm/pts))],
-                   DEFAULTS),
+              [(c, a) -> c.context = X.CairoContext(X.CairoPDFSurface("formats.pdf", width_mm/pts, height_mm/pts))],
               [ctx(c -> X.destroy(c))])
 end
 
-function PDF(path::AbstractString; size="a4", orientation=LANDSCAPE)
+function PDF(path; size="a4", orientation=LANDSCAPE)
     w, h = parse_paper_size(size)
     w, h = parse_orientation(orientation) == LANDSCAPE ? (h, w) : (w, h)
     PDF(path, w, h)
 end
 
-function PNG(path::AbstractString, width_px, height_px)
+function PNG(path, width_px, height_px)
     Attribute("PNG", STAGE_OUTPUT,
-              vcat([verify_stage_void,
-                    (c, a) -> c.context = X.CairoContext(X.CairoRGBSurface(width_px, height_px))],
-                   DEFAULTS),
+              [(c, a) -> c.context = X.CairoContext(X.CairoRGBSurface(width_px, height_px))],
               [ctx(c -> X.write_to_png(c.surface, path)),
                ctx(c -> X.destroy(c))])
 end
 
 
 
-# --- axes/paper declarations (before drawing/ink/pen commands)
+# --- paper (background colour)
 
-verify_stage_paper(c, a) = @assert c.stage <= STAGE_PAPER "Drawing already started"
-
-function Coords(scale; border=0.1::Float64, centred=false::Bool)
-    Attribute("Coords", STAGE_PAPER,
-              [verify_stage_paper,
-               ctx(c -> set_coords(c, scale, border, centred))],
-              NO_ACTIONS)
-end
+RED = parse_color("red")
+GREEN = parse_color("green")
+BLUE = parse_color("blue")
+WHITE = parse_color("white")
+BLACK = parse_color("black")
 
 function Paper(background="white")
     bg = parse_color(background)
     Attribute("Paper", STAGE_PAPER,
-              [verify_stage_paper,
-               ctx(c -> set_background(c, bg))],
+              [ctx(c -> set_background(c, bg))],
               NO_ACTIONS)
 end
 
@@ -306,7 +305,17 @@ function set_background(c, bg)
     X.restore(c)
 end
 
-function set_coords(c, scale, border::Float64, centred::Bool)
+
+
+# --- axes (coordinate scaling)
+
+function Axes(; scale=1, border=0.1, centred=false)
+    Attribute("Axes", STAGE_AXES,
+              [ctx(c -> set_coords(c, scale, border, centred))],
+              NO_ACTIONS)
+end
+
+function set_coords(c, scale, border, centred)
     nx, ny = X.width(c.surface), X.height(c.surface)
     if centred
         d = scale / (1 - 2*border)
@@ -327,15 +336,13 @@ function set_coords(c, scale, border::Float64, centred::Bool)
     end
 end
 
-Paper() = Paper("a4")
-
 
 
 # --- source/stroke attributes
 
 function Ink(foreground)
     f = parse_color(foreground)
-    Attribute("Ink", STAGE_STATE, [ctx(c -> X.set_source(c, f))], NO_ACTIONS)
+    Attribute("Ink", STAGE_DRAW, [ctx(c -> X.set_source(c, f))], NO_ACTIONS)
 end
 
 const LINE_CAPS = Dict("butt" => X.CAIRO_LINE_CAP_BUTT,
@@ -350,7 +357,7 @@ LINE_JOINS = Dict("mitre" => X.CAIRO_LINE_JOIN_MITER,
 parse_line_join = make_int_parser("line join", LINE_JOINS)
 
 function Pen(width; cap=nothing, join=nothing)
-    Attribute("Pen", STAGE_STATE, 
+    Attribute("Pen", STAGE_DRAW, 
               vcat(width >= 0 ? [ctx(c -> set_width(c, width))] : [],
                    cap != nothing ? [ctx(c -> X.set_line_cap(c, parse_line_cap(cap)))] : [],
                    join != nothing ? [ctx(c -> X.set_line_join(c, parse_line_join(join)))] : []),
@@ -371,10 +378,10 @@ end
 
 # --- transforms
 
-Scale(k) = Attribute("Scale", STAGE_STATE, [ctx(c -> X.scale(c, k, k))], NO_ACTIONS)
-Scale(x, y) = Attribute("Scale", STAGE_STATE, [ctx(c -> X.scale(c, x, y))], NO_ACTIONS)
-Translate(x, y) = Attribute("Translate", STAGE_STATE, [ctx(c -> X.translate(c, x, y))], NO_ACTIONS)
-Rotate(d) = Attribute("Rotate", STAGE_STATE, [ctx(c -> X.rotate(c, d))], NO_ACTIONS)
+Scale(k) = Attribute("Scale", STAGE_DRAW, [ctx(c -> X.scale(c, k, k))], NO_ACTIONS)
+Scale(x, y) = Attribute("Scale", STAGE_DRAW, [ctx(c -> X.scale(c, x, y))], NO_ACTIONS)
+Translate(x, y) = Attribute("Translate", STAGE_DRAW, [ctx(c -> X.translate(c, x, y))], NO_ACTIONS)
+Rotate(d) = Attribute("Rotate", STAGE_DRAW, [ctx(c -> X.rotate(c, d))], NO_ACTIONS)
 
 
 
@@ -386,5 +393,13 @@ end
 
 @lift(move, X.move_to)
 @lift(line, X.line_to)
+
+
+
+# --- defaults duing startup (working through the stages)
+
+DEFAULT_ATTRIBUTES = Dict(STAGE_OUTPUT => PNG("drawing.png", 300, 200),
+                          STAGE_PAPER => Paper(WHITE),
+                          STAGE_AXES => Axes(),)
 
 end

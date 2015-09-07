@@ -3,11 +3,11 @@
     with() do
     end
 end
-@test Drawing.thread_context.context == nothing
+@test isnull(Drawing.thread_context.context)
 
-@test_throws DrawingError draw(Paper("foo")) do
+@test_throws ErrorException draw(Paper("foo")) do
 end
-@test Drawing.thread_context.context == nothing
+@test isnull(Drawing.thread_context.context)
 
 # todo - test output but no paper
 # todo - test paper but no output

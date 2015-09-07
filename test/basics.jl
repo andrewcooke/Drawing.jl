@@ -1,31 +1,28 @@
 
 ignore = false  # when re-generating
 
-# TODO - add Paper if missing
-#draw(File("defaults.png")) do
-#    axes()
-#end
-#ignore || compare("defaults.png")
+draw(axes, PNG("defaults.png", 140, 100))
+ignore || compare("defaults.png")
 
-#draw(axes, File("portrait.png"), Paper(100, 140; background="lightgrey"))
+#draw(axes, PNG("portrait.png", 100, 140), Paper("lightgrey"))
 include("portrait.jl")
 ignore || compare("portrait.png")
-draw(axes, File("landscape.png"), Paper(140, 100; background="lightgrey"))
+draw(axes, PNG("landscape.png", 140, 100), Paper("lightgrey"))
 ignore || compare("landscape.png")
 
 
-draw(axes, File("scale.png"), Paper(100, 140; background="lightgrey"), Scale(0.5))
+draw(axes, PNG("scale.png", 100, 140), Paper("lightgrey"), Scale(0.5))
 ignore || compare("scale.png")
-draw(axes, File("scale2.png"), Paper(100, 140; background="lightgrey"), Scale(0.5, 1.0))
+draw(axes, PNG("scale2.png", 100, 140), Paper("lightgrey"), Scale(0.5, 1.0))
 ignore || compare("scale2.png")
-draw(axes, File("translate.png"), Paper(100, 140; background="lightgrey"), Translate(0.1, 0.1))
+draw(axes, PNG("translate.png", 100, 140), Paper("lightgrey"), Translate(0.1, 0.1))
 ignore || compare("translate.png")
-draw(axes, File("rotate.png"), Paper(100, 140; background="lightgrey"), Rotate(pi/4))
+draw(axes, PNG("rotate.png", 100, 140), Paper("lightgrey"), Rotate(pi/4))
 ignore || compare("rotate.png")
 
-draw(axes, File("centred-portrait.png"), Paper(100, 140; background="lightgrey", centred=true))
+draw(axes, PNG("centred-portrait.png", 100, 140), Paper("lightgrey"), Axes(centred=true))
 ignore || compare("centred-portrait.png")
-#draw(axes, File("centred-landscape.png"), Paper(140, 100; background="lightgrey", centred=true))
+#draw(axes, PNG("centred-landscape.png", 140, 100), Paper("lightgrey"), Axes(centred=true))
 include("centred-landscape.jl")
 ignore || compare("centred-landscape.png")
 
@@ -36,17 +33,17 @@ ignore || compare("centred-landscape.png")
 #    line(0.01, 0.01)
 #end
 
-#draw(wiggle, File("a10-round-round.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.2, background="lightgrey"), Scale(100), Pen(0.003, cap="round", join="round"))
-include("a10-round-round.jl")
-ignore || compare("a10-round-round.png")
+#draw(wiggle, PNG("round-round.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.2, "lightgrey"), Scale(100), Pen(0.003, cap="round", join="round"))
+include("round-round.jl")
+ignore || compare("round-round.png")
 
-#draw(wiggle, File("a10-butt-mitre.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.2, background="lightgrey"), Scale(100), Pen(0.003, cap="butt", join="mitre"))
-include("a10-butt-mitre.jl")
-ignore || compare("a10-butt-mitre.png")
+#draw(wiggle, PNG("butt-mitre.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.2, "lightgrey"), Scale(100), Pen(0.003, cap="butt", join="mitre"))
+include("butt-mitre.jl")
+ignore || compare("butt-mitre.png")
 
-#draw(wiggle, File("a10-square-bevel.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.2, background="lightgrey"), Scale(100), Pen(0.003, cap="square", join="bevel"))
-include("a10-square-bevel.jl")
-ignore || compare("a10-square-bevel.png")
+#draw(wiggle, PNG("square-bevel.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.2, "lightgrey"), Scale(100), Pen(0.003, cap="square", join="bevel"))
+include("square-bevel.jl")
+ignore || compare("square-bevel.png")
 
 #function square()
 #    move(0, 0)
@@ -56,23 +53,23 @@ ignore || compare("a10-square-bevel.png")
 #    line(0, 0)
 #end
 
-#draw(square, File("a10-square.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, background="lightgrey"))
-include("a10-square.jl")
-ignore || compare("a10-square.png")
+#draw(square, PNG("square.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, "lightgrey"))
+include("square.jl")
+ignore || compare("square.png")
 
-#draw(square, File("a10-square-scale.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, background="lightgrey"), Scale(0.5))
-include("a10-square-scale.jl")
-ignore || compare("a10-square-scale.png")
+#draw(square, PNG("square-scale.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, "lightgrey"), Scale(0.5))
+include("square-scale.jl")
+ignore || compare("square-scale.png")
 
-#draw(square, File("a10-square-scale-translate.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, background="lightgrey"), Scale(0.5), Translate(1, 1))
-include("a10-square-scale-translate.jl")
-ignore || compare("a10-square-scale-translate.png")
+#draw(square, PNG("square-scale-translate.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, "lightgrey"), Scale(0.5), Translate(1, 1))
+include("square-scale-translate.jl")
+ignore || compare("square-scale-translate.png")
 
-#draw(square, File("a10-square-rotate.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, background="lightgrey"), Rotate(pi/4))
-include("a10-square-rotate.jl")
-ignore || compare("a10-square-rotate.png")
+#draw(square, PNG("square-rotate.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, "lightgrey"), Rotate(pi/4))
+include("square-rotate.jl")
+ignore || compare("square-rotate.png")
 
-with(File("orange-blue-square.png"), Paper(100, 100), Pen(0.05)) do
+with(PNG("orange-blue-square.png", 100, 100), Pen(0.05)) do
     draw(Ink("orange")) do
         move(0.0, 0.0)
         line(1.0, 0.0)

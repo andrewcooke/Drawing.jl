@@ -43,7 +43,7 @@ function column(x, y, z)
 end
 
 # put it all together
-with(File("towers.png"), Paper(300, 150; centred=true), 
+with(PNG("towers.png", 300, 150), Axes(centred=true), 
 Ink("black"), Pen(0.03), Translate(0, 1), Scale(2.4/N)) do
     for (x, y) in roots()
         d = sqrt((x/N-1/2)^2 + (y/N-1/2)^2)
