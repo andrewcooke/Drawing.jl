@@ -8,7 +8,8 @@ import Colors; const C = Colors
 export DrawingError, has_current_point, get_current_point, 
        current_context,
        with, draw, paint,
-       Paper, File, Pen, Ink, Scale, Translate, Rotate,
+       cm, mm, in, pts,
+       PNG, PDF, Paper, Coords, Pen, Ink, Scale, Translate, Rotate,
        move, line
 
 include("cairo.jl")
@@ -36,9 +37,9 @@ const SCOPE_WITH = 1
 const SCOPE_ACTION = 2
 
 const STAGE_VOID = 0     # context uninitialized (void)
-const STAGE_OUTPUT = 1   # context has (nx, ny) tuple / attribute that does so
-const STAGE_PAPER = 2    # context created / attribute that does so
-const STAGE_STATE = 3    # attribute that changes state
+const STAGE_OUTPUT = 1   # context created with defaults
+const STAGE_PAPER = 2    # paper or axes defined
+const STAGE_STATE = 3    # drawing a=commands issued
 
 # this needs to be in a thread local variable once such things exist in julia
 type ThreadContext
@@ -51,7 +52,7 @@ end
 const thread_context = ThreadContext()
 
 function current_context()
-    @assert thread_context.stage >= STAGE_PAPER "Context not initialized"
+    @assert thread_context.stage >= STAGE_OUTPUT "Context not initialized"
     thread_context.context
 end
 
@@ -72,6 +73,16 @@ const NO_ACTIONS = Function[]
 NO_ACTION = c -> nothing
 ctx(f) = (c, a) -> f(c.context)
 
+function save_once(ctx, saved)
+    # save context if it exists
+    if !saved && ctx.stage >= STAGE_OUTPUT
+        X.save(ctx.context)
+        true
+    else
+        saved
+    end
+end
+
 function make_scope(verify, before, after)
 
     function scope(f, attributes::Attribute...)
@@ -82,31 +93,21 @@ function make_scope(verify, before, after)
 
         try
 
+            saved = save_once(c, saved)
+
             # stable sort, respecting user where possible
             a = sort!([attributes...], by=a -> a.stage, alg=InsertionSort)
                 
-            # save context if it exists
-            if c.stage >= STAGE_PAPER
-                X.save(c.context)
-                saved = true
-            end
-            
             # check for conflicts and push scope
             verify(c, a)
             pushed = true
             
             for attribute in a
-                @assert attribute.stage-1 <= c.stage <= attribute.stage 
-                "Incorrect attribute order (missing output or paper attribute?)"
                 for x in attribute.before
                     x(c, attribute)
                 end
                 c.stage = attribute.stage
-                # or save as soon as we have a context
-                if !saved && c.stage >= STAGE_PAPER
-                    X.save(c.context)
-                    saved = true
-                end
+                saved = save_once(c, saved)
             end
             
             before(c.context)
@@ -124,8 +125,8 @@ function make_scope(verify, before, after)
         finally
 
             pushed && pop!(c.scope)
+            
             if c.scope[end] == SCOPE_NONE
-                # TODO - destroy surface?
                 c.context = nothing
                 c.stage = STAGE_VOID
             else
@@ -207,52 +208,11 @@ end
 
 # --- output (file, display, etc)
 
-FILES = Dict("png" -> (X.CairoRGBSurface, X.write_to_pgn),
-             "pdf" -> (
-
-function File(path::AbstractString)
-    Attribute("File", STAGE_OUTPUT,
-              [(c, a) -> c.context = (nx, ny) -> X.CairoRGBSurface(nx, ny)],
-              [ctx(c -> X.write_to_png(c.surface, path))])
-end
-
-
-
-# --- paper declaration
-
-const LANDSCAPE = 1
-const PORTRAIT = 2
-
-const ORIENTATIONS = Dict("landscape" => LANDSCAPE,
-                          "porttrait" => PORTRAIT)
-parse_orientation = make_int_parser("orientation", ORIENTATIONS)
-
-# it's OK (necessary, even) for this to have non-null defaults, because it's
-# setting up a completely new context (unlike other scopes, which are simply
-# modifying some part).
-
-function Paper(nx::Int, ny::Int; background="white", border=0.1::Float64,
-               centred=false::Bool)
-    bg = parse_color(background)
-    Attribute("Paper", STAGE_PAPER,
-              vcat([(c, a) -> c.context = X.CairoContext(c.context(nx, ny)),
-                    ctx(c -> set_background(c, nx, ny, bg)),
-                    ctx(c -> set_coords(c, nx, ny, border, centred))],
-                   # default foreground and pen
-                   Ink(BLACK).before,
-                   Pen(0.02; cap=X.CAIRO_LINE_CAP_ROUND, join=X.CAIRO_LINE_JOIN_ROUND).before),
-              NO_ACTIONS)
-end
-
-function Paper(size::AbstractString; dpi=300::Int, background="white", 
-               orientation=LANDSCAPE, border=0.1::Float64,
-               centred=false::Bool)
-    nx, ny = map(int, dpi * parse_paper_size(size) / 25.4)
-    if parse_orientation(orientation) == LANDSCAPE
-        nx, ny = ny, nx
-    end
-    Paper(nx, ny; background=background, border=border, centred=centred)
-end
+# allow sizes to be given as 30cm etc
+const cm = 10
+const mm = 1
+const in = 25.4
+const pts = in/72
 
 # these should be as portrait, in mm (x, y)
 const PAPER_SIZES = Dict("a0" => [841, 1189],
@@ -270,33 +230,99 @@ const PAPER_SIZES = Dict("a0" => [841, 1189],
                          "legal" => [216, 356],
                          "junior" => [127, 203],
                          "ledger" => [279, 432])
-                         
 parse_paper_size = make_parser("paper size", PAPER_SIZES)                   
 
-function set_background(c, nx, ny, bg)
+RED = parse_color("red")
+GREEN = parse_color("green")
+BLUE = parse_color("blue")
+WHITE = parse_color("white")
+BLACK = parse_color("black")
+
+const LANDSCAPE = 1
+const PORTRAIT = 2
+const ORIENTATIONS = Dict("landscape" => LANDSCAPE,
+                          "porttrait" => PORTRAIT)
+parse_orientation = make_int_parser("orientation", ORIENTATIONS)
+
+verify_stage_void(c, a) = @assert c.stage == STAGE_VOID "Context already initialized"
+
+const DEFAULTS = [ctx(c -> set_background(c, WHITE)),
+                  ctx(c -> X.set_source(c, BLACK)),
+                  ctx(c -> set_coords(c, 1, 0.1, false)),
+                  ctx(c -> set_width(c, 0.02)),
+                  ctx(c -> X.set_line_cap(c, X.CAIRO_LINE_CAP_ROUND)),
+                  ctx(c -> X.set_line_join(c, X.CAIRO_LINE_JOIN_ROUND))]
+
+# width and heigh are in mm
+function PDF(path::AbstractString, width_mm, height_mm)
+    Attribute("PDF", STAGE_OUTPUT,
+              vcat([verify_stagre_void,
+                    (c, a) -> c.context = X.CairoContext(X.CairoPDFSurface("formats.pdf", width_mm/pts, height_mm/pts))],
+                   DEFAULTS),
+              [ctx(c -> X.destroy(c))])
+end
+
+function PDF(path::AbstractString; size="a4", orientation=LANDSCAPE)
+    w, h = parse_paper_size(size)
+    w, h = parse_orientation(orientation) == LANDSCAPE ? (h, w) : (w, h)
+    PDF(path, w, h)
+end
+
+function PNG(path::AbstractString, width_px, height_px)
+    Attribute("PNG", STAGE_OUTPUT,
+              vcat([verify_stage_void,
+                    (c, a) -> c.context = X.CairoContext(X.CairoRGBSurface(width_px, height_px))],
+                   DEFAULTS),
+              [ctx(c -> X.write_to_png(c.surface, path)),
+               ctx(c -> X.destroy(c))])
+end
+
+
+
+# --- axes/paper declarations (before drawing/ink/pen commands)
+
+verify_stage_paper(c, a) = @assert c.stage <= STAGE_PAPER "Drawing already started"
+
+function Coords(scale; border=0.1::Float64, centred=false::Bool)
+    Attribute("Coords", STAGE_PAPER,
+              [verify_stage_paper,
+               ctx(c -> set_coords(c, scale, border, centred))],
+              NO_ACTIONS)
+end
+
+function Paper(background="white")
+    bg = parse_color(background)
+    Attribute("Paper", STAGE_PAPER,
+              [verify_stage_paper,
+               ctx(c -> set_background(c, bg))],
+              NO_ACTIONS)
+end
+
+function set_background(c, bg)
     X.save(c)
-    X.rectangle(c, 0, 0, nx, ny)
+    X.rectangle(c, 0, 0, X.width(c.surface), X.height(c.surface))
     X.set_source(c, bg)
     X.fill(c)
     X.restore(c)
 end
 
-function set_coords(c, nx::Int, ny::Int, border::Float64, centred::Bool)
+function set_coords(c, scale, border::Float64, centred::Bool)
+    nx, ny = X.width(c.surface), X.height(c.surface)
     if centred
-        d = 2 / (1 - 2*border)
-        b = (d - 2) / 2
+        d = scale / (1 - 2*border)
+        b = (d - scale) / scale
         if nx < ny  # portrait
-            G.set_coords(c, 0, 0, nx, ny, -1-b, 1+b, (ny/nx)+b, -(ny/nx)-b)
+            G.set_coords(c, 0, 0, nx, ny, -scale-b, scale+b, scale*(ny/nx)+b, -scale*(ny/nx)-b)
         else
-            G.set_coords(c, 0, 0, nx, ny, -(nx/ny)-b, (nx/ny)+b, 1+b, -1-b)
+            G.set_coords(c, 0, 0, nx, ny, -scale*(nx/ny)-b, scale*(nx/ny)+b, scale+b, -scale-b)
         end
     else
-        d = 1 / (1 - 2*border)
-        b = (d - 1) / 2
+        d = scale / (1 - 2*border)
+        b = (d - scale) / 2
         if nx < ny  # portrait
-            G.set_coords(c, 0, 0, nx, ny, -b, 1+b, (ny/nx)*d - b, -b)
+            G.set_coords(c, 0, 0, nx, ny, -b, scale+b, scale*(ny/nx)*d - b, -b)
         else
-            G.set_coords(c, 0, 0, nx, ny, -b, (nx/ny)*d - b, 1+b, -b)
+            G.set_coords(c, 0, 0, nx, ny, -b, scale*(nx/ny)*d - b, scale+b, -b)
         end
     end
 end
@@ -305,22 +331,12 @@ Paper() = Paper("a4")
 
 
 
-# --- source attributes
+# --- source/stroke attributes
 
 function Ink(foreground)
     f = parse_color(foreground)
     Attribute("Ink", STAGE_STATE, [ctx(c -> X.set_source(c, f))], NO_ACTIONS)
 end
-
-RED = parse_color("red")
-GREEN = parse_color("green")
-BLUE = parse_color("blue")
-WHITE = parse_color("white")
-BLACK = parse_color("black")
-
-
-
-# --- stroke attributes
 
 const LINE_CAPS = Dict("butt" => X.CAIRO_LINE_CAP_BUTT,
                        "round" => X.CAIRO_LINE_CAP_ROUND,
