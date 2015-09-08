@@ -4,12 +4,13 @@ module Drawing
 import Cairo; const X = Cairo
 import Graphics; const G = Graphics
 import Colors; const C = Colors
+import Tk; const T = Tk
 
 export DrawingError, has_current_point, get_current_point, 
        current_context,
        with, draw, paint,
        cm, mm, in, pts,
-       PNG, PDF, Paper, Axes, Pen, Ink, Scale, Translate, Rotate,
+       PNG, PDF, TK, Paper, Axes, Pen, Ink, Scale, Translate, Rotate,
        move, line
 
 include("cairo.jl")
@@ -285,6 +286,32 @@ function PNG(path, width_px, height_px)
                ctx(c -> X.destroy(c))])
 end
 
+function press_return()
+    println("Press RETURN to close window")
+    readline(STDIN)
+end
+
+function TK(width_px, height_px; name="Drawing", pause=true)
+    window, canvas = nothing, nothing
+    function create(c, a)
+        window = Tk.Toplevel(name, width_px, height_px)
+        canvas = Tk.Canvas(window)
+        Tk.pack(canvas, expand=true, fill="both")
+        c.context = Tk.getgc(canvas)
+    end
+    function destroy(c, a)
+        Tk.reveal(canvas)
+        Tk.update()
+        if pause
+            press_return()
+            Tk.destroy(window)
+        end
+    end
+    Attribute("TK", STAGE_OUTPUT,
+              with_defaults([create]),
+              [destroy])
+end
+
 
 
 # --- paper (background colour)
@@ -405,7 +432,7 @@ end
 
 # --- defaults duing startup (working through the stages)
 
-DEFAULT_ATTRIBUTES = Dict(STAGE_OUTPUT => PNG("drawing.png", 300, 200),
+DEFAULT_ATTRIBUTES = Dict(STAGE_OUTPUT => TK(300, 200),
                           STAGE_PAPER => Paper(WHITE),
                           STAGE_AXES => Axes(),)
 

@@ -29,7 +29,34 @@ In providing a simple API, the package has two important aims:
    context with certain attributes (ink colour, pen width, etc), and then have
    an inner scope that changes a subset of those values.
 
-# Example
+# Getting Started
+
+```julia
+julia> Pkg.add("Drawing")
+
+julia> using Drawing
+
+julia> 
+
+# API
+
+The API consists of:
+
+1. **Scopes** introduce *attributes*, may include either nested *scopes* or
+   *actions*, and may trigger some process (like stroking or filling a path)
+   at the end.  For example, `draw()` is a scope that introduces attributes,
+   includes actions, and draws the path on closing.
+
+2. **Attributes** modify the Cairo context for the duration of the scope.  For
+   example, `Ink()` sets the Cairo source for the scope.
+
+3. **Actions** typically describe a Cairo path.  For example, `move()` and
+   `line()`.
+
+These can be seen in the example below, which has three scopes, nested two
+deep, and includes the attributes `Ink()`, `Pen()`, etc.
+
+## Example
 
 ```julia
 with(PNG("red-blue-square.png", 100, 100), Ink("red"), Pen(0.1)) do
@@ -50,24 +77,6 @@ end
 The default coordinate system is from 0 to 1 (on the shorter axis, origin
 bottom left), with 10% of the space used as a border on each side.  Unlike
 "raw" cairo, the "current point" is preserved across strokes.
-
-# API
-
-The API consists of:
-
-1. **Scopes** introduce *attributes*, may include either nested *scopes* or
-   *actions*, and may trigger some process (like stroking or filling a path)
-   at the end.  For example, `draw()` is a scope that introduces attributes,
-   includes actions, and draws the path on closing.
-
-2. **Attributes** modify the Cairo context for the duration of the scope.  For
-   example, `Ink()` sets the Cairo source for the scope.
-
-3. **Actions** typically describe a Cairo path.  For example, `move()` and
-   `line()`.
-
-These can be seen in the example above, which has three scopes, nested two
-deep, and includes the attributes `Ink()`, `Pen()`, etc.
 
 ## Scopes
 
