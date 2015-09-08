@@ -37,16 +37,16 @@ julia> using Drawing
 
 julia> with(Axes(centred=true), Pen(0.2)) do
 		   paint(Ink("yellow")) do
-			   circle(0.8)
+			   circle(0.9)
 		   end
 		   draw() do
-			   circle(0.8)
-			   circle(0.5; from=-3pi/4, to=-pi/4)
+			   circle(0.9)
+			   circle(0.5; from=-4pi/5, to=-pi/5)
 		   end
 		   paint() do
-			   move(0.25, 0.15)
+			   move(0.3, 0.2)
 			   circle(0.2)
-			   move(-0.25, 0.15)
+			   move(-0.3, 0.2)
 			   circle(0.2)
 		   end
 	   end
