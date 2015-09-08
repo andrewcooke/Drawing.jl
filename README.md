@@ -35,9 +35,21 @@ julia> Pkg.add("Drawing")
 
 julia> using Drawing
 
-julia> draw() do
-           line(1, 1)
-       end
+julia> with(Axes(centred=true), Pen(0.2)) do
+		   paint(Ink("yellow")) do
+			   circle(0.8)
+		   end
+		   draw() do
+			   circle(0.8)
+			   circle(0.5; from=-3pi/4, to=-pi/4)
+		   end
+		   paint() do
+			   move(0.25, 0.15)
+			   circle(0.2)
+			   move(-0.25, 0.15)
+			   circle(0.2)
+		   end
+	   end
 Press RETURN to close window
 ```
 
@@ -119,7 +131,7 @@ the scope, from left to right.
   to the given path.
 
 * `TK(width_px, height_px; name="Drawing", destroy=true)` initializes a Cairo
-  context associated with a Tk window, which is displated at the end of the
+  context associated with a Tk window, which is displayed at the end of the
   scope.  If `dstroy=true` then the user is asked to press return, after which
   the window is destroyed; if it is false then there is no prompt and the
   window remains on the screen (until the window is closed by the user or
@@ -203,6 +215,10 @@ Currently, all actions affect the Cairo path.
 
 * `line(x, y)` creates a straught line path between the current point and the
   given point, in user coordinates.
+
+* `circle(radius; from=0, to=2pi)` create a circle centred at the current
+  point, with a given radius.  Setting `from` and `to` to smaller angles
+  creates an arc (incomplete circle).
 
 # Raw Cairo
 

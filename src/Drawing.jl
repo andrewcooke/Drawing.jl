@@ -11,7 +11,7 @@ export DrawingError, has_current_point, get_current_point,
        with, draw, paint,
        cm, mm, in, pts,
        PNG, PDF, TK, Paper, Axes, Pen, Ink, Scale, Translate, Rotate,
-       move, line
+       move, line, circle
 
 include("cairo.jl")
 
@@ -299,7 +299,7 @@ function TK(width_px, height_px; name="Drawing", destroy=true)
         Tk.pack(canvas, expand=true, fill="both")
         c.context = Tk.getgc(canvas)
     end
-    function destroy(c, a)
+    function close(c, a)
         Tk.reveal(canvas)
         Tk.update()
         if destroy
@@ -309,7 +309,7 @@ function TK(width_px, height_px; name="Drawing", destroy=true)
     end
     Attribute("TK", STAGE_OUTPUT,
               with_defaults([create]),
-              [destroy])
+              [close])
 end
 
 
@@ -428,7 +428,13 @@ end
 @lift(move, X.move_to)
 @lift(line, X.line_to)
 
-
+function circle(radius; from=0, to=2pi)
+    c = current_context()
+    x, y = get_current_point(c)
+    X.new_sub_path(c)
+    X.arc(c, x, y, radius, from, to)
+    X.move_to(c, x, y)  # don't change current point
+end
 
 # --- defaults duing startup (working through the stages)
 
