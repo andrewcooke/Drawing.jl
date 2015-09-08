@@ -316,7 +316,9 @@ end
 
 function Axes(; scale=1, border=0.1, centred=false)
     Attribute("Axes", STAGE_AXES,
-              [ctx(c -> set_coords(c, scale, border, centred))],
+              [ctx(c -> set_coords(c, scale, border, centred)),
+               # start at origin
+               ctx(c -> X.move_to(c, 0, 0))],
               NO_ACTIONS)
 end
 
