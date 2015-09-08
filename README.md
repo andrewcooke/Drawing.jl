@@ -45,7 +45,7 @@ Press RETURN to close window
 
 which displays this window:
 
-[screenshot](screenshot.png)
+![screenshot](screenshot.png)
 
 # API
 
