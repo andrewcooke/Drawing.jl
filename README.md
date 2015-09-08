@@ -58,7 +58,7 @@ The API consists of:
 1. **Scopes** introduce *attributes*, may include either nested *scopes* or
    *actions*, and may trigger some process (like stroking or filling a path)
    at the end.  For example, `draw()` is a scope that introduces attributes,
-   includes actions, and triggers a stroke on closing.
+   includes actions, and draws the path on closing.
 
 2. **Attributes** modify the Cairo context for the duration of the scope.  For
    example, `Ink()` sets the Cairo source for the scope.
@@ -73,7 +73,7 @@ deep, and includes the attributes `Paper()`, `Ink()`, etc.
 
 * `with()` defines a scope, but takes no action on closing.
 
-* `draw()` defines a scope and, on closing, strokes the current path.
+* `draw()` defines a scope and, on closing, draws the current path.
 
 * `paint()` defines a scope and, on closing, fills the current path.
 

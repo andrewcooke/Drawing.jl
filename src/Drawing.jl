@@ -20,7 +20,7 @@ end
 Base.showerror(io::IO, e::DrawingError) = print(io, e.msg)
 
 # TODO
-# - other output formats
+# - add back default pen 
 # - fancy sources
 # - text
 # - curves
@@ -260,10 +260,15 @@ const ORIENTATIONS = Dict("landscape" => LANDSCAPE,
                           "porttrait" => PORTRAIT)
 parse_orientation = make_int_parser("orientation", ORIENTATIONS)
 
+# set these at the start so thing look pretty
+function with_defaults(before)
+    vcat(before, Pen(join="round", cap="round").before)
+end
+
 # width and heigh are in mm
 function PDF(path, width_mm, height_mm)
     Attribute("PDF", STAGE_OUTPUT,
-              [(c, a) -> c.context = X.CairoContext(X.CairoPDFSurface("formats.pdf", width_mm/pts, height_mm/pts))],
+              with_defaults([(c, a) -> c.context = X.CairoContext(X.CairoPDFSurface("formats.pdf", width_mm/pts, height_mm/pts))]),
               [ctx(c -> X.destroy(c))])
 end
 
@@ -275,7 +280,7 @@ end
 
 function PNG(path, width_px, height_px)
     Attribute("PNG", STAGE_OUTPUT,
-              [(c, a) -> c.context = X.CairoContext(X.CairoRGBSurface(width_px, height_px))],
+              with_defaults([(c, a) -> c.context = X.CairoContext(X.CairoRGBSurface(width_px, height_px))]),
               [ctx(c -> X.write_to_png(c.surface, path)),
                ctx(c -> X.destroy(c))])
 end
