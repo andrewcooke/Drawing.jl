@@ -37,7 +37,7 @@ julia> using Drawing
 
 julia> draw() do
            line(1, 1)
-        end
+       end
 Press RETURN to close window
 ```
 
