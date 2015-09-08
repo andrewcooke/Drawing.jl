@@ -291,7 +291,7 @@ function press_return()
     readline(STDIN)
 end
 
-function TK(width_px, height_px; name="Drawing", pause=true)
+function TK(width_px, height_px; name="Drawing", destroy=true)
     window, canvas = nothing, nothing
     function create(c, a)
         window = Tk.Toplevel(name, width_px, height_px)
@@ -302,7 +302,7 @@ function TK(width_px, height_px; name="Drawing", pause=true)
     function destroy(c, a)
         Tk.reveal(canvas)
         Tk.update()
-        if pause
+        if destroy
             press_return()
             Tk.destroy(window)
         end

@@ -119,6 +119,13 @@ the scope, from left to right.
   and, at the end of the scope, writes a PDF format image, of the given size,
   to the given path.
 
+* `TK(width_px, height_px; name="Drawing", destroy=true)` initializes a Cairo
+  context associated with a Tk window, which is displated at the end of the
+  scope.  If `dstroy=true` then the user is asked to press return, after which
+  the window is destroyed; if it is false then there is no prompt and the
+  window remains on the screen (until the window is closed by the user or
+  julia exits).
+
 * `Paper(background)` sets the background colour.
 
 * `Axes(; scale=1, border=0.1, centred=false)` Sets the Cairo user
