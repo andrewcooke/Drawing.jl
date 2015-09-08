@@ -3,8 +3,9 @@
 # Drawing
 
 * [Introduction](#introduction)
-* [Example](#example)
+* [Getting Started](#getting-started)
 * [API](#api)
+  * [Example](#example)
   * [Scopes](#scopes)
   * [Attributes](#attributes)
   * [Actions](#actions)
@@ -36,7 +37,15 @@ julia> Pkg.add("Drawing")
 
 julia> using Drawing
 
-julia> 
+julia> draw() do
+           line(1, 1)
+        end
+Press RETURN to close window
+```
+
+which displays this window:
+
+[screenshot](screenshot.png)
 
 # API
 
