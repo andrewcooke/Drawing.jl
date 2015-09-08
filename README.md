@@ -5,7 +5,6 @@
 * [Introduction](#introduction)
 * [Getting Started](#getting-started)
 * [API](#api)
-  * [Example](#example)
   * [Scopes](#scopes)
   * [Attributes](#attributes)
   * [Actions](#actions)
@@ -64,8 +63,6 @@ The API consists of:
 
 These can be seen in the example below, which has three scopes, nested two
 deep, and includes the attributes `Ink()`, `Pen()`, etc.
-
-## Example
 
 ```julia
 with(PNG("red-blue-square.png", 100, 100), Ink("red"), Pen(0.1)) do
