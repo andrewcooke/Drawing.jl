@@ -3,7 +3,7 @@
 # Drawing
 
 * [Introduction](#introduction)
-* [Examples](#examples)
+* [Example](#example)
 * [API](#api)
   * [Scopes](#scopes)
   * [Attributes](#attributes)
@@ -29,24 +29,7 @@ In providing a simple API, the package has two important aims:
    context with certain attributes (ink colour, pen width, etc), and then have
    an inner scope that changes a subset of those values.
 
-# Examples
-
-First, a simple, inteactive example.
-
-```julia
-julia> using Drawing
-
-julia> draw() do
-           line(1, 1)
-       end
-
-julia>
-```
-
-This will generate a file called "drawing.png" containing a single, diagonal
-line.
-
-A slightly more complex example, as a program:
+# Example
 
 ```julia
 with(PNG("red-blue-square.png", 100, 100), Ink("red"), Pen(0.1)) do
