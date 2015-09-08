@@ -132,7 +132,7 @@ the scope, from left to right.
 
 * `TK(width_px, height_px; name="Drawing", destroy=true)` initializes a Cairo
   context associated with a Tk window, which is displayed at the end of the
-  scope.  If `dstroy=true` then the user is asked to press return, after which
+  scope.  If `destroy=true` then the user is asked to press return, after which
   the window is destroyed; if it is false then there is no prompt and the
   window remains on the screen (until the window is closed by the user or
   julia exits).
