@@ -20,7 +20,7 @@ end
 Base.showerror(io::IO, e::DrawingError) = print(io, e.msg)
 
 # TODO
-# - add back default pen 
+# - gtk/tk window
 # - fancy sources
 # - text
 # - curves
