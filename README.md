@@ -67,7 +67,7 @@ The API consists of:
    `line()`.
 
 These can be seen in the example above, which has three scopes, nested two
-deep, and includes the attributes `Paper()`, `Ink()`, etc.
+deep, and includes the attributes `Ink()`, `Pen()`, etc.
 
 ## Scopes
 
