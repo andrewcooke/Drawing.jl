@@ -83,23 +83,37 @@ scopes.
 
 ## Attributes
 
-There are three kinds of attribute: bootstrap, output and state.
+There are two kinds of attribute: initial and dynamic.
 
-The order of bootstrap and output attributes is not important, but they can
-only appear in the outermost scope.  The order of state attributes may be
-important (eg the relative order of `Scale()` and `Translate()`) and follows
-the order given in the scope, from left to right.
+The order of initial attributes is not important, but they can only appear in
+the outermost scope.  The order of dynamic attributes may be important (eg the
+relative order of `Scale()` and `Translate()`) and follows the order given in
+the scope, from left to right.
 
-### Bootstrap Attributes
+### Initial Attributes
 
-* `Paper(nx, ny; background="white", border=0.1, centred=false)` initialises a
-  Cairo context of the given size (in pixels).  Excluding the border (measured
-  as a fraction of the smallest side), the coordinate system is either bottom
-  left, or centred, and is scaled uniformly (assuming square pixels), so that
-  the smallest axis has unit length.
+* `PNG(path, width_px, height_px)` initializes a Cairo context and, at the end
+  of the scope, writes a PNG format image, of the given size, to the given
+  path.  Here width and height are measured in *pixels*.
 
-  Below, example unit axes (x is horizontal) for 100x140 pixel images, with a
-  border of 0.1 (ie 10 pixels), where the landscape axes are centred.  Note
+* `PDF(path, width_mm, height_mm)` initializes a Cairo context and, at the end
+  of the scope, writes a PDF format image, of the given size, to the given
+  path.  Here width and height are measured in *mm*.
+
+* `PDF(path; size="a4", orientation="landscape")` initializes a Cairo context
+  and, at the end of the scope, writes a PDF format image, of the given size,
+  to the given path.
+
+* `Paper(background)` sets the background colour.
+
+* `Axes(; scale=1, border=0.1, centred=false)` Sets the Cairo user
+  coordinates.  Excluding the border (measured as a fraction of the smallest
+  side), the coordinate system is either bottom left, or centred, and is
+  scaled uniformly (assuming square pixels), so that the smallest axis has
+  unit length.
+
+  Below are plotted unit axes (x is horizontal) for 100x140 pixel images, with
+  a border of 0.1 (ie 10 pixels), where the landscape axes are centred.  Note
   that drawing is not clipped to the unit axes area - it can extend over the
   whole page.
 
@@ -108,19 +122,7 @@ the order given in the scope, from left to right.
 
   *Click on image to see associated script.*
 
-* `Paper(size; dpi=300, orientation=LANDSCAPE, background="white", border=0.1,
-  centred=false)` intializes a Cairo context as above, but with the pixel
-  sizes inferred from the paper size (eg "a4"), dpi and orientation.
-
-* `Paper()` initializes a Cairo context with "a4" sized paper, using the
-  default values above.
-
-### Output Attributes
-
-* `File(path)` writes the final drawing to the given path.  The format is
-  inferred from the file extension.
-
-### State Attributes
+### Dynamic Attributes
 
 * `Ink(colour)` sets the Cairo source (ie the colour used to draw or paint).
   The colour can be a `Color` (see the Colors.jl package) or string ("red",
