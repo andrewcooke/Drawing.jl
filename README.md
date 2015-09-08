@@ -9,7 +9,6 @@
   * [Attributes](#attributes)
   * [Actions](#actions)
 * [Raw Cairo](#raw-cairo)
-* [Gallery](#gallery)
 
 # Introduction
 
@@ -210,6 +209,3 @@ Currently, all actions affect the Cairo path.
 Arbitrary calls to Cairo can be added as scopes, attributes and actions.  Copy
 from the [source](src/Drawing.jl).
 
-# Gallery
-
-TODO
