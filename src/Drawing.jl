@@ -1,4 +1,11 @@
 
+# TODO
+# - fancy sources
+# - text
+# - ellipses, bezier curves or similar
+# - actions that take lists of points (or generators?)
+
+
 module Drawing
 
 import Cairo; const X = Cairo
@@ -13,19 +20,50 @@ export DrawingError, has_current_point, get_current_point,
        PNG, PDF, TK, Paper, Axes, Pen, Ink, Scale, Translate, Rotate,
        move, line, circle
 
+# add additional calls to cairo
 include("cairo.jl")
+
+
+
+# --- utilities
 
 type DrawingError <: Exception 
     msg::AbstractString
 end
 Base.showerror(io::IO, e::DrawingError) = print(io, e.msg)
 
-# TODO
-# - gtk/tk window
-# - fancy sources
-# - text
-# - curves
-# - actions that take lists of points (or generators?)
+# allow sizes to be given as 30cm etc (convert to mm)
+const cm = 10
+const mm = 1
+const in = 25.4
+const pts = in/72
+
+# similarly for angles (convert to degrees)
+const rad = 180/pi
+const deg = 1
+deg2rad(x) = x*pi/180
+
+int(x) = round(Int, x)
+
+# lookup value from table, using lower case string as key
+function lookup(name, table, value::AbstractString)
+    v = lowercase(value)
+    if haskey(table, v)
+        table[v]
+    else
+        throw(DrawingError("Unknown $(name): $(value)"))
+    end
+end
+
+parse_color(c::AbstractString) = parse(C.Colorant, c)
+parse_color(c::C.Color) = c
+
+const RED = parse_color("red")
+const GREEN = parse_color("green")
+const BLUE = parse_color("blue")
+const WHITE = parse_color("white")
+const BLACK = parse_color("black")
+
 
 
 # --- global / thread-local state
@@ -68,7 +106,6 @@ type Attribute
 end
 
 const NO_ACTIONS = Function[]
-NO_ACTION = c -> nothing
 ctx(f) = (c, a) -> f(get(c.context))
 
 function save_once(ctx, saved)
@@ -161,9 +198,10 @@ function make_scope(verify_push, before, after)
 end
 
 
+
 # --- actual scopes
 
-function with_current_point(action)
+function preserve_current_point(action)
     function (c)
         has_point = has_current_point(c)
         x, y = get_current_point(c)
@@ -174,8 +212,8 @@ function with_current_point(action)
     end
 end    
 
-stroke = with_current_point(X.stroke)
-fill = with_current_point(X.fill)
+stroke = preserve_current_point(X.stroke)
+fill = preserve_current_point(X.fill)
 
 function verify_nesting(c, a)
     if c.scope[end] == SCOPE_ACTION 
@@ -190,53 +228,10 @@ function make_verify(scope)
     end
 end
 
-with = make_scope(make_verify(SCOPE_WITH), NO_ACTION, NO_ACTION)
-draw = make_scope(make_verify(SCOPE_ACTION), NO_ACTION, stroke)
-paint = make_scope(make_verify(SCOPE_ACTION), NO_ACTION, fill)
-
-
-
-# --- utilities
-
-# allow sizes to be given as 30cm etc
-const cm = 10
-const mm = 1
-const in = 25.4
-const pts = in/72
-
-# similarly for angles
-const rad = 180/pi
-const deg = 1
-deg2rad(x) = x*pi/180
-
-parse_color(c::AbstractString) = parse(C.Colorant, c)
-parse_color(c::C.Color) = c
-
-int(x) = round(Int, x)
-
-function make_parser(name, table)
-    function parser(value)
-        v = lowercase(value)
-        if haskey(table, v)
-            table[v]
-        else
-            throw(DrawingError("Unknown $(name): $(value)"))
-        end
-    end
-end
-
-function make_int_parser(name, table)
-    string_parser = make_parser(name, table)
-    function parser(value)
-        if isa(value, Integer)
-            value
-        elseif isa(value, AbstractString)
-            string_parser(value)
-        else
-            throw(DrawingError("Bad type for $(name): $(typeof(value))"))
-        end
-    end
-end
+INACTIVE = c -> nothing
+with = make_scope(make_verify(SCOPE_WITH), INACTIVE, INACTIVE)
+draw = make_scope(make_verify(SCOPE_ACTION), INACTIVE, stroke)
+paint = make_scope(make_verify(SCOPE_ACTION), INACTIVE, fill)
 
 
 
@@ -258,13 +253,13 @@ const PAPER_SIZES = Dict("a0" => [841, 1189],
                          "legal" => [216, 356],
                          "junior" => [127, 203],
                          "ledger" => [279, 432])
-parse_paper_size = make_parser("paper size", PAPER_SIZES)                   
-
+parse_paper_size(size::AbstractString = lookup("paper size", PAPER_SIZES, size) 
 const LANDSCAPE = 1
 const PORTRAIT = 2
 const ORIENTATIONS = Dict("landscape" => LANDSCAPE,
                           "porttrait" => PORTRAIT)
-parse_orientation = make_int_parser("orientation", ORIENTATIONS)
+parse_orientation(orientation::AbstractString) = lookup("orientation", ORIENTATIONS, orientation)
+parse_orientation(orientation::Integer) = orientation
 
 # set these at the start so thing look pretty
 function with_defaults(before)
@@ -320,12 +315,6 @@ end
 
 
 # --- paper (background colour)
-
-RED = parse_color("red")
-GREEN = parse_color("green")
-BLUE = parse_color("blue")
-WHITE = parse_color("white")
-BLACK = parse_color("black")
 
 function Paper(background="white")
     bg = parse_color(background)
@@ -387,13 +376,15 @@ end
 const LINE_CAPS = Dict("butt" => X.CAIRO_LINE_CAP_BUTT,
                        "round" => X.CAIRO_LINE_CAP_ROUND,
                        "square" => X.CAIRO_LINE_CAP_SQUARE)
-parse_line_cap = make_int_parser("line cap", LINE_CAPS)
+parse_line_cap(cap::AbstractString) = lookup("line cap", LINE_CAPS, cap)
+parse_Line_cap(cap::Integer) = cap
 
 LINE_JOINS = Dict("mitre" => X.CAIRO_LINE_JOIN_MITER,
                   "miter" => X.CAIRO_LINE_JOIN_MITER,
                   "round" => X.CAIRO_LINE_JOIN_ROUND,
                   "bevel" => X.CAIRO_LINE_JOIN_BEVEL)
-parse_line_join = make_int_parser("line join", LINE_JOINS)
+parse_line_join(join::AbstractString) = lookup("line join", LINE_JOINS, join)
+parse_line_join(join::Integer) = join
 
 function Pen(width; cap=nothing, join=nothing)
     Attribute("Pen", STAGE_DRAW, 

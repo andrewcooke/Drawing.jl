@@ -187,14 +187,12 @@ the scope, from left to right.
   **Note:** To scale the initial axes to have a range of 0-100, say, use
  `Scale(1/100)` (ie use the reciprocal of the range required).
 
-* `Scale(x. y)` scales the Cairo user coordinates independently in x and y.
-
 * `Translate(x, y)` translates the Cairo user coordinates.  This is a relative
   correction - the same shape (ie the same coordinates) appear shifted by the
   given x and y offsets.
 
 * `Rotate(angle)` rotates the Cairo user coordinates about the origin.  The
-  angle is measured in radians, anti-clockwise.
+  angle is measured in degrees, anti-clockwise.
 
   Below, the same unit square is plotted (from left to right): in the original
   axes; after `Scale(0.5)`; after `Scale(0.5), Translate(1, 1)`; after
