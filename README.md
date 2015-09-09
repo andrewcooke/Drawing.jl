@@ -37,17 +37,17 @@ julia> using Drawing
 
 julia> with(Axes(centred=true), Pen(0.2)) do
 		   paint(Ink("yellow")) do
-			   circle(0.9)
+			   circle(1)           # face background, painted yellow
 		   end
 		   draw() do
-			   circle(0.9)
-			   circle(0.5; from=-4pi/5, to=-pi/5)
+			   circle(1)           # face outline, drawn black (default)
+			   circle(0.5; from=200deg, to=340deg)    # smile
 		   end
 		   paint() do
-			   move(0.3, 0.2)
-			   circle(0.2)
-			   move(-0.3, 0.2)
-			   circle(0.2)
+			   move(0.3, 0.25)     # right eye position
+			   circle(0.2)         # paint eye
+			   move(-0.3, 0.25)    # left eye position
+			   circle(0.2)         # paint eye
 		   end
 	   end
 Press RETURN to close window

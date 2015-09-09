@@ -9,7 +9,7 @@ import Tk; const T = Tk
 export DrawingError, has_current_point, get_current_point, 
        current_context,
        with, draw, paint,
-       cm, mm, in, pts,
+       cm, mm, in, pts, rad, deg,
        PNG, PDF, TK, Paper, Axes, Pen, Ink, Scale, Translate, Rotate,
        move, line, circle
 
@@ -198,6 +198,17 @@ paint = make_scope(make_verify(SCOPE_ACTION), NO_ACTION, fill)
 
 # --- utilities
 
+# allow sizes to be given as 30cm etc
+const cm = 10
+const mm = 1
+const in = 25.4
+const pts = in/72
+
+# similarly for angles
+const rad = 180/pi
+const deg = 1
+deg2rad(x) = x*pi/180
+
 parse_color(c::AbstractString) = parse(C.Colorant, c)
 parse_color(c::C.Color) = c
 
@@ -230,12 +241,6 @@ end
 
 
 # --- output (file, display, etc)
-
-# allow sizes to be given as 30cm etc
-const cm = 10
-const mm = 1
-const in = 25.4
-const pts = in/72
 
 # these should be as portrait, in mm (x, y)
 const PAPER_SIZES = Dict("a0" => [841, 1189],
@@ -412,10 +417,13 @@ end
 
 # --- transforms
 
-Scale(k) = Attribute("Scale", STAGE_DRAW, [ctx(c -> X.scale(c, k, k))], NO_ACTIONS)
-Scale(x, y) = Attribute("Scale", STAGE_DRAW, [ctx(c -> X.scale(c, x, y))], NO_ACTIONS)
+# currently, only allowing scale, translate and rortate, and not sure about
+# those.  want to be able to confidently do translations ourselves (eg
+# ellipse code)
+
+Scale(factor) = Attribute("Scale", STAGE_DRAW, [ctx(c -> X.scale(c, factor, factor))], NO_ACTIONS)
 Translate(x, y) = Attribute("Translate", STAGE_DRAW, [ctx(c -> X.translate(c, x, y))], NO_ACTIONS)
-Rotate(d) = Attribute("Rotate", STAGE_DRAW, [ctx(c -> X.rotate(c, d))], NO_ACTIONS)
+Rotate(degree) = Attribute("Rotate", STAGE_DRAW, [ctx(c -> X.rotate(c, deg2rad(degree)))], NO_ACTIONS)
 
 
 
@@ -428,11 +436,11 @@ end
 @lift(move, X.move_to)
 @lift(line, X.line_to)
 
-function circle(radius; from=0, to=2pi)
+function circle(radius; from=0, to=360)
     c = current_context()
     x, y = get_current_point(c)
     X.new_sub_path(c)
-    X.arc(c, x, y, radius, from, to)
+    X.arc(c, x, y, radius, deg2rad(from), deg2rad(to))
     X.move_to(c, x, y)  # don't change current point
 end
 
