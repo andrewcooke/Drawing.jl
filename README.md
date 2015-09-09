@@ -214,9 +214,10 @@ Currently, all actions affect the Cairo path.
 * `line(x, y)` creates a straught line path between the current point and the
   given point, in user coordinates.
 
-* `circle(radius; from=0, to=2pi)` create a circle centred at the current
+* `circle(radius; from=0, to=360)` create a circle centred at the current
   point, with a given radius.  Setting `from` and `to` to smaller angles
-  creates an arc (incomplete circle).
+  creates an arc (incomplete circle, with angles measured anti-clockwise from
+  the x axis, in degrees).
 
 ## Raw Cairo
 
