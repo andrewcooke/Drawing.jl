@@ -8,7 +8,7 @@
   * [Scopes](#scopes)
   * [Attributes](#attributes)
   * [Actions](#actions)
-* [Raw Cairo](#raw-cairo)
+  * [Raw Cairo](#raw-cairo)
 
 # Introduction
 
@@ -218,8 +218,22 @@ Currently, all actions affect the Cairo path.
   point, with a given radius.  Setting `from` and `to` to smaller angles
   creates an arc (incomplete circle).
 
-# Raw Cairo
+## Raw Cairo
 
-Arbitrary calls to Cairo can be added as scopes, attributes and actions.  Copy
-from the [source](src/Drawing.jl).
+There is an additional scope (see above) called `cairo()` which should be
+followed by a do block with a single argument, which is the cairo context.
+This can then be used to make arbitrary calls to Cairo functions.
 
+For example:
+
+```julia
+julia> using Drawing
+
+julia> using Cairo
+
+julia> cairo() do ctx
+          line_to(ctx, 1, 1)
+	      stroke(ctx)
+       end
+Press RETURN to close window
+```

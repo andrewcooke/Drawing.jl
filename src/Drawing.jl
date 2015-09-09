@@ -15,7 +15,7 @@ import Tk; const T = Tk
 
 export DrawingError, has_current_point, get_current_point, 
        current_context,
-       with, draw, paint,
+       with, cairo, draw, paint,
        cm, mm, in, pts, rad, deg,
        PNG, PDF, TK, Paper, Axes, Pen, Ink, Scale, Translate, Rotate,
        move, line, circle
@@ -170,9 +170,9 @@ function make_scope(verify_push, before, after)
                 saved = save_once(c, saved)
             end
 
-            before(get(c.context))
+            args = before(get(c.context))
             
-            f()
+            args == nothing ? f() : f(args...)
             
             after(get(c.context))
             
@@ -230,9 +230,9 @@ end
 
 INACTIVE = c -> nothing
 with = make_scope(make_verify(SCOPE_WITH), INACTIVE, INACTIVE)
+cairo = make_scope(make_verify(SCOPE_WITH), c -> [c], INACTIVE)
 draw = make_scope(make_verify(SCOPE_ACTION), INACTIVE, stroke)
 paint = make_scope(make_verify(SCOPE_ACTION), INACTIVE, fill)
-
 
 
 # --- output (file, display, etc)
@@ -253,7 +253,8 @@ const PAPER_SIZES = Dict("a0" => [841, 1189],
                          "legal" => [216, 356],
                          "junior" => [127, 203],
                          "ledger" => [279, 432])
-parse_paper_size(size::AbstractString = lookup("paper size", PAPER_SIZES, size) 
+parse_paper_size(size::AbstractString) = lookup("paper size", PAPER_SIZES, size)
+
 const LANDSCAPE = 1
 const PORTRAIT = 2
 const ORIENTATIONS = Dict("landscape" => LANDSCAPE,
