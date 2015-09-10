@@ -213,7 +213,7 @@ the scope, from left to right.
 
   Below, the same unit square is plotted (from left to right): in the original
   axes; after `Scale(0.5)`; after `Scale(0.5), Translate(1, 1)`; after
-  `Rotate(pi/4)`.
+  `Rotate(45)`.
 
   [![default](test/target/square.png)](test/square.jl)
   [![scale](test/target/square-scale.png)](test/square-scale.jl)
