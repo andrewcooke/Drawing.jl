@@ -103,9 +103,27 @@ bottom left), with 10% of the space used as a border on each side.  Unlike
 
 * `paint()` defines a scope and, on closing, fills the current path.
 
+* `cairo()` should be followed by a do block with a single argument, which is
+  the cairo context.  This can then be used to make arbitrary calls to Cairo
+  functions.
+
+  For example:
+
+  ```julia
+  julia> using Drawing
+
+  julia> using Cairo
+
+  julia> cairo() do ctx
+			line_to(ctx, 1, 1)
+			stroke(ctx)
+		 end
+  Press RETURN to close window
+  ```
+
 There are some constraints on how scopes are used: the `with()` scope cannot
-contain actions; the `draw()` and `paint()` scopes cannot contain nested
-scopes.
+contain actions; the `draw()`, `paint()` and `cairo()` scopes cannot contain
+nested scopes.
 
 ## Attributes
 
@@ -219,22 +237,3 @@ Currently, all actions affect the Cairo path.
   creates an arc (incomplete circle, with angles measured anti-clockwise from
   the x axis, in degrees).
 
-## Raw Cairo
-
-There is an additional scope (see above) called `cairo()` which should be
-followed by a do block with a single argument, which is the cairo context.
-This can then be used to make arbitrary calls to Cairo functions.
-
-For example:
-
-```julia
-julia> using Drawing
-
-julia> using Cairo
-
-julia> cairo() do ctx
-          line_to(ctx, 1, 1)
-	      stroke(ctx)
-       end
-Press RETURN to close window
-```

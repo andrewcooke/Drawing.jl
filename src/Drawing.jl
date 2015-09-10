@@ -72,8 +72,10 @@ const BLACK = parse_color("black")
 typealias Context Nullable{X.CairoContext}
 
 const SCOPE_NONE = 0
-const SCOPE_WITH = 1
-const SCOPE_ACTION = 2
+const SCOPE_INNER = 1
+const SCOPE_OUTER_DRAW = 2
+const SCOPE_OUTER_PAINT = 3
+const SCOPE_OUTER_OTHER = 3
 
 const STAGE_NONE = 0     # context uninitialized
 const STAGE_OUTPUT = 1   # create context (and on exit save file)
@@ -216,7 +218,7 @@ stroke = preserve_current_point(X.stroke)
 fill = preserve_current_point(X.fill)
 
 function verify_nesting(c, a)
-    if c.scope[end] == SCOPE_ACTION 
+    if c.scope[end] > SCOPE_INNER
         throw(DrawingError("Cannot nest a scope inside an action scope"))
     end
 end
@@ -229,10 +231,10 @@ function make_verify(scope)
 end
 
 INACTIVE = c -> nothing
-with = make_scope(make_verify(SCOPE_WITH), INACTIVE, INACTIVE)
-cairo = make_scope(make_verify(SCOPE_WITH), c -> [c], INACTIVE)
-draw = make_scope(make_verify(SCOPE_ACTION), INACTIVE, stroke)
-paint = make_scope(make_verify(SCOPE_ACTION), INACTIVE, fill)
+with = make_scope(make_verify(SCOPE_INNER), INACTIVE, INACTIVE)
+cairo = make_scope(make_verify(SCOPE_OUTER_OTHER), c -> [c], INACTIVE)
+draw = make_scope(make_verify(SCOPE_OUTER_DRAW), INACTIVE, stroke)
+paint = make_scope(make_verify(SCOPE_OUTER_PAINT), INACTIVE, fill)
 
 
 # --- output (file, display, etc)

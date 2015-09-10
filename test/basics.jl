@@ -13,11 +13,11 @@ ignore || compare("landscape.png")
 
 draw(axes, PNG("scale.png", 100, 140), Paper("lightgrey"), Scale(0.5))
 ignore || compare("scale.png")
-draw(axes, PNG("scale2.png", 100, 140), Paper("lightgrey"), Scale(0.5, 1.0))
-ignore || compare("scale2.png")
+#draw(axes, PNG("scale2.png", 100, 140), Paper("lightgrey"), Scale(0.5, 1.0))
+#ignore || compare("scale2.png")
 draw(axes, PNG("translate.png", 100, 140), Paper("lightgrey"), Translate(0.1, 0.1))
 ignore || compare("translate.png")
-draw(axes, PNG("rotate.png", 100, 140), Paper("lightgrey"), Rotate(pi/4))
+draw(axes, PNG("rotate.png", 100, 140), Paper("lightgrey"), Rotate(45))
 ignore || compare("rotate.png")
 
 draw(axes, PNG("centred-portrait.png", 100, 140), Paper("lightgrey"), Axes(centred=true))
@@ -65,7 +65,7 @@ ignore || compare("square-scale.png")
 include("square-scale-translate.jl")
 ignore || compare("square-scale-translate.png")
 
-#draw(square, PNG("square-rotate.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, "lightgrey"), Rotate(pi/4))
+#draw(square, PNG("square-rotate.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, "lightgrey"), Rotate(45))
 include("square-rotate.jl")
 ignore || compare("square-rotate.png")
 

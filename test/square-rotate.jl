@@ -1,7 +1,7 @@
 
 draw(PNG("square-rotate.png", 140, 100), 
      Paper("lightgrey"),
-     Rotate(pi/4)) do
+     Rotate(45)) do
     move(0, 0)
     line(1, 0)
     line(1, 1)
