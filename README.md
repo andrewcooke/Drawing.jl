@@ -8,7 +8,6 @@
   * [Scopes](#scopes)
   * [Attributes](#attributes)
   * [Actions](#actions)
-  * [Raw Cairo](#raw-cairo)
 
 # Introduction
 
