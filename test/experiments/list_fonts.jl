@@ -8,5 +8,8 @@ for f in ff
     fc = D.list_faces(f)
     for c in fc
         println("  $(D.get_name(c))")
+        d = D.describe(c)
     end
+    gc()  # call finalizer
+    println(D.gccount)
 end

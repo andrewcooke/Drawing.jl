@@ -74,3 +74,15 @@ function get_name(fc::FontFace)
     bytestring(ccall((:pango_font_face_get_face_name, X._jl_libpango), Cstring, (Ptr{Void},), fc.ptr))
 end
 
+# cannot use immutable here as finalizer() complains
+type FontDescription
+    ptr::Ptr{Void}
+    function FontDescription(ptr)
+        this = new(ptr)
+        finalizer(this, fd -> ccall((:pango_font_description_free, X._jl_libpango), Void, (Ptr{Void},), fd.ptr))
+    end
+end
+
+function describe(fc::FontFace)
+    FontDescription(ccall((:pango_font_face_describe, X._jl_libpango), Ptr{Void}, (Ptr{Void},), fc.ptr))
+end
