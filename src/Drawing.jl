@@ -17,8 +17,8 @@ export DrawingError, has_current_point, get_current_point,
        current_context,
        with, cairo, draw, paint,
        cm, mm, in, pts, rad, deg,
-       PNG, PDF, TK, Paper, Axes, Pen, Ink, Scale, Translate, Rotate,
-       move, line, circle
+       PNG, PDF, TK, Paper, Axes, Pen, Ink, Scale, Translate, Rotate, Font,
+       move, line, circle, text
 
 # add additional calls to cairo
 include("cairo.jl")
@@ -421,6 +421,41 @@ Rotate(degree) = Attribute("Rotate", STAGE_DRAW, [ctx(c -> X.rotate(c, deg2rad(d
 
 
 
+# --- text attributes
+
+const FONT_SLANTS = Dict("normal" => X.FONT_SLANT_NORMAL,
+                         "italic" => X.FONT_SLANT_ITALIC,
+                         "oblique" => X.FONT_SLANT_OBLIQUE)
+parse_slant(slant::Integer) = slant
+parse_slant(slant::AbstractString) = lookup("font slant", FONT_SLANTS, slant)
+
+const FONT_WEIGHTS = Dict("normal" => X.FONT_WEIGHT_NORMAL,
+                          "bold" => X.FONT_WEIGHT_BOLD)
+parse_weight(weight::Integer) = weight
+parse_weight(weight::AbstractString) = lookup("font weight", FONT_WEIGHTS, weight)
+
+function set_font(c, family, slant, weight, size)
+    family_now = Int[0]
+    slant_now = Uint8[0]
+    weight_now = Uint8[0]
+    get_font_face(c, family_now, slant_now, size_now)
+    println("now $(family_now) $(slant_now) $(weight_now)")
+    X.set_font_face(family != nothing ? family : family_now,
+                    slant != nothing ? parse_slant(slant) : slant_now,
+                    weight != nothing ? parse_weight(weight) : weight_now)
+    if (size != nothing)
+        X.set_font_weight(c, size)
+    end
+end
+
+function Font(; family=nothing, slant=nothing, weight=nothing, size=nothing)
+    Attribute("Font", STAGE_DRAW,
+              [c -> set_font(c, family, slant, weight, size)],
+              NO_ACTIONS)
+end
+
+
+
 # --- paths
 
 macro lift(new, old)
@@ -437,6 +472,14 @@ function circle(radius; from=0, to=360)
     X.arc(c, x, y, radius, deg2rad(from), deg2rad(to))
     X.move_to(c, x, y)  # don't change current point
 end
+
+function text(s)
+    c = current_context()
+    X.set_text(c, s, false)
+    X.show_layout(c)
+end
+
+
 
 # --- defaults duing startup (working through the stages)
 
