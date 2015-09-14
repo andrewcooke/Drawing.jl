@@ -1,4 +1,6 @@
 
+import Base.==
+
 # at some point these should be a pull request for Cairo.jl
 # WARNING: verbs have been moved to the front of function names
 
@@ -80,9 +82,29 @@ type FontDescription
     function FontDescription(ptr)
         this = new(ptr)
         finalizer(this, fd -> ccall((:pango_font_description_free, X._jl_libpango), Void, (Ptr{Void},), fd.ptr))
+        this
     end
 end
 
 function describe(fc::FontFace)
     FontDescription(ccall((:pango_font_face_describe, X._jl_libpango), Ptr{Void}, (Ptr{Void},), fc.ptr))
+end
+
+# non-standard function names here to support round-tripping to strings
+
+function Base.show(io::IO, fd::FontDescription)
+    s = bytestring(ccall((:pango_font_description_to_string, X._jl_libpango), Cstring, (Ptr{Void},), fd.ptr))
+    print(io, s)
+end
+
+function Base.convert(::Type{FontDescription}, s::AbstractString)
+    FontDescription(ccall((:pango_font_description_from_string, X._jl_libpango), Ptr{Void}, (Ptr{Cchar},), s))
+end
+
+function ==(fd1::FontDescription, fd2::FontDescription)
+    convert(Bool, ccall((:pango_font_description_equal, X._jl_libpango), Cint, (Ptr{Void}, Ptr{Void}), fd1.ptr, fd2.ptr))
+end
+
+function Base.hash(fd:FontDescription)
+    ccall((:pango_font_description_hash, X._jl_libpango), Culong, (Ptr{Void},), fd.ptr)
 end
