@@ -105,6 +105,21 @@ function ==(fd1::FontDescription, fd2::FontDescription)
     convert(Bool, ccall((:pango_font_description_equal, X._jl_libpango), Cint, (Ptr{Void}, Ptr{Void}), fd1.ptr, fd2.ptr))
 end
 
-function Base.hash(fd:FontDescription)
+function Base.hash(fd::FontDescription)
     ccall((:pango_font_description_hash, X._jl_libpango), Culong, (Ptr{Void},), fd.ptr)
+end
+
+function Base.copy(fd::FontDescription)
+    FontDescription(ccall((:pango_font_description_copy, X._jl_libpango), Ptr{Void}, (Ptr{Void},), fd.ptr))
+end
+
+for name in [:style, :variant, :weight, :stretch, :gravity]
+    g1 = symbol(:get_, name)
+    g2 = symbol(:pango_font_description_, g1)
+    s1 = symbol(:set_, name)
+    s2 = symbol(:pango_font_description_, g1)
+    @eval begin
+        $g1(fd::FontDescription) = ccall(($(Expr(:quote, g2)), X._jl_libpango), Culong, (Ptr{Void},), fd.ptr)
+        $s1(fd::FontDescription, x) = ccall(($(Expr(:quote, s2)), X._jl_libpango), Void, (Ptr{Void}, Culong), fd.ptr, x)
+    end
 end

@@ -10,6 +10,7 @@ for f in ff
     for c in fc
         d1 = D.describe(c)
         println("  $(D.get_name(c)): $(d1)")
+        println("  $(D.get_style(d1)), $(D.get_variant(d1)), $(D.get_weight(d1)), $(D.get_stretch(d1)), $(D.get_gravity(d1))")
         d2 = convert(D.FontDescription, "$(d1)")
         @assert d1 == d2
         @assert hash(d1) == hash(d2)

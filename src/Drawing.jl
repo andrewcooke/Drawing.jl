@@ -18,7 +18,8 @@ export DrawingError, has_current_point, get_current_point,
        with, cairo, draw, paint,
        cm, mm, in, pts, rad, deg,
        PNG, PDF, TK, Paper, Axes, Pen, Ink, Scale, Translate, Rotate, Font,
-       move, line, circle, text
+       move, line, circle, text,
+       print_fonts
 
 # add additional calls to cairo
 include("cairo.jl")
@@ -86,9 +87,10 @@ const STAGE_DRAW = 4     # general drawing
 # this needs to be in a thread local variable once such things exist in julia
 type ThreadContext
     context::Context
+    fonts::Vector{FontDescription}  # separate from context
     stage::Int           # used to track context creation
     scope::Vector{Int}   # used to track scoping rules
-    ThreadContext() = new(Context(), STAGE_NONE, Int[SCOPE_NONE])
+    ThreadContext() = new(Context(), FontDescription["sans"], STAGE_NONE, Int[SCOPE_NONE])
 end
 
 const thread_context = ThreadContext()
@@ -421,38 +423,58 @@ Rotate(degree) = Attribute("Rotate", STAGE_DRAW, [ctx(c -> X.rotate(c, deg2rad(d
 
 
 
-# --- text attributes
+# --- (pango) text attributes
 
-const FONT_SLANTS = Dict("normal" => X.FONT_SLANT_NORMAL,
-                         "italic" => X.FONT_SLANT_ITALIC,
-                         "oblique" => X.FONT_SLANT_OBLIQUE)
-parse_slant(slant::Integer) = slant
-parse_slant(slant::AbstractString) = lookup("font slant", FONT_SLANTS, slant)
+#const FONT_SLANTS = Dict("normal" => X.FONT_SLANT_NORMAL,
+#                         "italic" => X.FONT_SLANT_ITALIC,
+#                         "oblique" => X.FONT_SLANT_OBLIQUE)
+#parse_slant(slant::Integer) = slant
+#parse_slant(slant::AbstractString) = lookup("font slant", FONT_SLANTS, slant)
+#
+#const FONT_WEIGHTS = Dict("normal" => X.FONT_WEIGHT_NORMAL,
+#                          "bold" => X.FONT_WEIGHT_BOLD)
+#parse_weight(weight::Integer) = weight
+#parse_weight(weight::AbstractString) = lookup("font weight", FONT_WEIGHTS, wei#ght)
+#
+#function set_font(c, family, slant, weight, size)
+#    family_now = Int[0]
+#    slant_now = Uint8[0]
+#    weight_now = Uint8[0]
+#    get_font_face(c, family_now, slant_now, size_now)
+#    println("now $(family_now) $(slant_now) $(weight_now)")
+#    X.set_font_face(family != nothing ? family : family_now,
+#                    slant != nothing ? parse_slant(slant) : slant_now,
+#                    weight != nothing ? parse_weight(weight) : weight_now)
+#    if (size != nothing)
+#        X.set_font_weight(c, size)
+#    end
+#end
+#
+#function Font(; family=nothing, slant=nothing, weight=nothing, size=nothing)
+#    Attribute("Font", STAGE_DRAW,
+#              [c -> set_font(c, family, slant, weight, size)],
+#              NO_ACTIONS)
+#end
 
-const FONT_WEIGHTS = Dict("normal" => X.FONT_WEIGHT_NORMAL,
-                          "bold" => X.FONT_WEIGHT_BOLD)
-parse_weight(weight::Integer) = weight
-parse_weight(weight::AbstractString) = lookup("font weight", FONT_WEIGHTS, weight)
+function to_font(fd::FontDescription)
+    s = string(fd)
+    "Font(\"$s\")"
+end
 
-function set_font(c, family, slant, weight, size)
-    family_now = Int[0]
-    slant_now = Uint8[0]
-    weight_now = Uint8[0]
-    get_font_face(c, family_now, slant_now, size_now)
-    println("now $(family_now) $(slant_now) $(weight_now)")
-    X.set_font_face(family != nothing ? family : family_now,
-                    slant != nothing ? parse_slant(slant) : slant_now,
-                    weight != nothing ? parse_weight(weight) : weight_now)
-    if (size != nothing)
-        X.set_font_weight(c, size)
+function print_fonts()
+    fm = get_font_map_default()
+    ff = list_families(fm)
+    for f in ff
+        m = is_monospace(f) ? "[monospace]" : ""
+        println("\n  $(get_name(f)) $m")
+        fc = list_faces(f)
+        for c in fc
+            d = describe(c)
+            @printf("  %20s %s\n", "$(get_name(c)):", to_font(d))
+        end
     end
 end
 
-function Font(; family=nothing, slant=nothing, weight=nothing, size=nothing)
-    Attribute("Font", STAGE_DRAW,
-              [c -> set_font(c, family, slant, weight, size)],
-              NO_ACTIONS)
-end
 
 
 
