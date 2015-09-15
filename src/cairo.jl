@@ -123,3 +123,37 @@ for name in [:style, :variant, :weight, :stretch, :gravity]
         $s1(fd::FontDescription, x) = ccall(($(Expr(:quote, s2)), X._jl_libpango), Void, (Ptr{Void}, Culong), fd.ptr, x)
     end
 end
+
+immutable Layout
+    ptr::Ptr{Void}
+end
+
+function set_text(l::Layout, text)
+    ccall((:pango_layout_set_text, X._jl_libpango), Void, (Ptr{Void}, Ptr{Cchar}), l.ptr, text)
+end
+
+function set_description(l::Layout, fd::FontDescription)
+    ccall((:pango_layout_set_font_description, X._jl_libpango), Void, (Ptr{Void}, Ptr{Void}), l.ptr, fd.ptr)
+end
+
+function update_layout(c::X.CairoContext, l::Layout)
+    ccall((:pango_cairo_update_layout, X._jl_libpangocairo), Void, (Ptr{Void}, Ptr{Void}), c.ptr, l.ptr)
+end
+
+function show_path(c::X.CairoContext, l::Layout)
+    ccall((:pango_cairo_layout_path, X._jl_libpangocairo), Void, (Ptr{Void}, Ptr{Void}), c.ptr, l.ptr)
+end
+
+immutable Rectangle
+    x::Cint
+    y::Cint
+    width::Cint
+    height::Cint
+end
+
+function get_pixel_extents(l::Layout)
+    ink = Rectangle[Rectangle(0, 0, 0, 0)]
+    logical = Rectangle[Rectangle(0, 0, 0, 0)]
+    ccall((:pango_layout_get_pixel_extents, X._jl_libpango), Void, (Ptr{Void}, Ptr{Void}, Ptr{Void}), l.ptr, ink, logical)
+    ink[1], logical[1]
+end

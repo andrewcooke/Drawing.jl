@@ -84,13 +84,21 @@ const STAGE_PAPER = 2    # background colour
 const STAGE_AXES = 3     # axis scaling
 const STAGE_DRAW = 4     # general drawing
 
+type FontState
+    fd::FontDescription
+    align::Int
+    FontState() = new("sans", 1)
+    FontState(f::FontState) = new(copy(f.fd), f.align)
+end
+
+
 # this needs to be in a thread local variable once such things exist in julia
 type ThreadContext
     context::Context
-    fonts::Vector{FontDescription}  # separate from context
+    font::Vector{FontState}  # separate from context
     stage::Int           # used to track context creation
     scope::Vector{Int}   # used to track scoping rules
-    ThreadContext() = new(Context(), FontDescription["sans"], STAGE_NONE, Int[SCOPE_NONE])
+    ThreadContext() = new(Context(), FontState[FontState()], STAGE_NONE, Int[SCOPE_NONE])
 end
 
 const thread_context = ThreadContext()
@@ -141,7 +149,7 @@ function add_defaults(stage, attributes)
     end
 end
 
-function make_scope(verify_push, before, after)
+function make_scope(verify, before, after)
 
     function scope(f, attributes::Attribute...)
 
@@ -158,7 +166,9 @@ function make_scope(verify_push, before, after)
             add_defaults(c.stage+1, a)
                 
             # check for conflicts and push scope
-            verify_push(c, a)
+            scope = verify(c, a)
+            push!(c.scope, scope)
+            push!(c.font, FontState(c.font[end]))
             pushed = true
             
             for attribute in a
@@ -188,7 +198,10 @@ function make_scope(verify_push, before, after)
             
         finally
 
-            pushed && pop!(c.scope)
+            if pushed
+                pop!(c.scope)
+                pop!(c.font)
+            end
             
             if c.scope[end] == SCOPE_NONE
                 c.context = Context()
@@ -219,16 +232,12 @@ end
 stroke = preserve_current_point(X.stroke)
 fill = preserve_current_point(X.fill)
 
-function verify_nesting(c, a)
-    if c.scope[end] > SCOPE_INNER
-        throw(DrawingError("Cannot nest a scope inside an action scope"))
-    end
-end
-
 function make_verify(scope)
     function verify(c, a)
-        verify_nesting(c, a)
-        push!(c.scope, scope)
+        if c.scope[end] > SCOPE_INNER
+            throw(DrawingError("Cannot nest a scope inside an action scope"))
+        end
+        scope
     end
 end
 
@@ -268,7 +277,9 @@ parse_orientation(orientation::Integer) = orientation
 
 # set these at the start so thing look pretty
 function with_defaults(before)
-    vcat(before, Pen(join="round", cap="round").before)
+    vcat(before, 
+         Pen(join="round", cap="round").before,
+         Font("sans").before)
 end
 
 # width and heigh are in mm
@@ -475,8 +486,21 @@ function print_fonts()
     end
 end
 
+set_via(setter, value) = (c, a) -> setter(c.font[end].fd, value)
 
+function Font(desc; style=nothing, variant=nothing, weight=nothing, stretch=nothing, gravity=nothing, align=nothing)
+    Attribute("Font", STAGE_DRAW,
+              vcat(desc != nothing ? [(c, a) -> c.font[end].fd = desc] : [],
+                   style != nothing ? [set_via(set_style, parse_style(style))] : [],
+                   variant != nothing ? [set_via(set_variant, parse_variant(variant))] : [],
+                   weight != nothing ? [set_via(set_weight, parse_weight(weight))] : [],
+                   stretch != nothing ? [set_via(set_stretch, parse_stretch(stretch))] : [],
+                   gravity != nothing ? [set_via(set_gravity, parse_gravity(gravity))] : [],
+                   align != nothing ? [(c, a) -> c.font[end].align = align] : []),
+              NO_ACTIONS)
+end
 
+Font(; style=nothing, variant=nothing, weight=nothing, stretch=nothing, gravity=nothing, align=nothing) = Font(nothing; style=style, weight=weight, stretch=stretch, gravity=gravity, align=align)
 
 # --- paths
 
@@ -496,9 +520,37 @@ function circle(radius; from=0, to=360)
 end
 
 function text(s)
-    c = current_context()
-    X.set_text(c, s, false)
-    X.show_layout(c)
+    t = thread_context
+    c = get(t.context)
+    l = Layout(c.layout)
+
+    X.save(c)
+    X.scale(c, 1, -1)
+    x, y = get_current_point(c)
+    println("$x $y")
+
+    try
+        
+        set_text(l, s)
+        set_description(l, t.font[end].fd)
+        update_layout(c, l)
+
+        ink, logical = get_pixel_extents(l)
+        println("$(logical.x) $(logical.y) $(logical.width) $(logical.height)")
+#        tl = G.device_to_user(c, logical.x, logical.y)
+#        br = G.device_to_user(c, logical.x + logical.width, logical.y + logical.height)
+#        println("$(tl[1]) $(tl[2]) $(br[1]) $(br[2])")
+        if t.font[end].align == 5
+#            println("$(x - (br[1] - tl[1])/2) $(y - (br[2] - tl[2])/2)")
+#            X.move_to(c, x - (br[1] - tl[1])/2, y - (br[2] - tl[2])/2)
+            X.move_to(c, x - 0.5 * logical.width, y - 0.5 * logical.height)
+        end
+        show_path(c, l)
+
+    finally
+        X.move_to(c, x, y)
+        X.restore(c)
+    end
 end
 
 
