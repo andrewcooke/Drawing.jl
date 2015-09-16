@@ -527,7 +527,6 @@ function text(s)
     X.save(c)
     X.scale(c, 1, -1)
     x, y = get_current_point(c)
-    println("$x $y")
 
     try
         
@@ -535,16 +534,10 @@ function text(s)
         set_description(l, t.font[end].fd)
         update_layout(c, l)
 
-        ink, logical = get_pixel_extents(l)
-        println("$(logical.x) $(logical.y) $(logical.width) $(logical.height)")
-#        tl = G.device_to_user(c, logical.x, logical.y)
-#        br = G.device_to_user(c, logical.x + logical.width, logical.y + logical.height)
-#        println("$(tl[1]) $(tl[2]) $(br[1]) $(br[2])")
-        if t.font[end].align == 5
-#            println("$(x - (br[1] - tl[1])/2) $(y - (br[2] - tl[2])/2)")
-#            X.move_to(c, x - (br[1] - tl[1])/2, y - (br[2] - tl[2])/2)
-            X.move_to(c, x - 0.5 * logical.width, y - 0.5 * logical.height)
-        end
+        ink, log = get_pixel_extents(l)
+        xalign = x - log.x - ((t.font[end].align - 1) % 3) * log.width / 2
+        yalign = y - log.y - round((t.font[end].align-2)/3) * log.height / 2
+        X.move_to(c, xalign, yalign)
         show_path(c, l)
 
     finally
