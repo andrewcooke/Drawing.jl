@@ -169,7 +169,7 @@ immutable Layout
 end
 
 function set_text(l::Layout, text)
-    ccall((:pango_layout_set_text, X._jl_libpango), Void, (Ptr{Void}, Ptr{Cchar}), l.ptr, text)
+    ccall((:pango_layout_set_text, X._jl_libpango), Void, (Ptr{Void}, Ptr{Cchar}, Cint), l.ptr, text, length(text))
 end
 
 function set_description(l::Layout, fd::FontDescription)
