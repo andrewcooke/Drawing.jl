@@ -18,6 +18,7 @@ export DrawingError, has_current_point, get_current_point,
        with, cairo, draw, paint,
        cm, mm, in, pts, rad, deg,
        PNG, PDF, TK, Paper, Axes, Pen, Ink, Scale, Translate, Rotate, Font,
+       Layout,
        move, line, circle, text,
        print_fonts
 
@@ -87,8 +88,9 @@ const STAGE_DRAW = 4     # general drawing
 type FontState
     fd::FontDescription
     align::Int
-    FontState() = new("sans", 1)
-    FontState(f::FontState) = new(copy(f.fd), f.align)
+    size::Float64        # not applied directly as transform dependent
+    FontState() = new("sans", 1, -1)
+    FontState(f::FontState) = new(copy(f.fd), f.align, f.size)
 end
 
 
@@ -395,10 +397,10 @@ const LINE_CAPS = Dict("butt" => X.CAIRO_LINE_CAP_BUTT,
 parse_line_cap(cap::AbstractString) = lookup("line cap", LINE_CAPS, cap)
 parse_Line_cap(cap::Integer) = cap
 
-LINE_JOINS = Dict("mitre" => X.CAIRO_LINE_JOIN_MITER,
-                  "miter" => X.CAIRO_LINE_JOIN_MITER,
-                  "round" => X.CAIRO_LINE_JOIN_ROUND,
-                  "bevel" => X.CAIRO_LINE_JOIN_BEVEL)
+const LINE_JOINS = Dict("mitre" => X.CAIRO_LINE_JOIN_MITER,
+                        "miter" => X.CAIRO_LINE_JOIN_MITER,
+                        "round" => X.CAIRO_LINE_JOIN_ROUND,
+                        "bevel" => X.CAIRO_LINE_JOIN_BEVEL)
 parse_line_join(join::AbstractString) = lookup("line join", LINE_JOINS, join)
 parse_line_join(join::Integer) = join
 
@@ -424,48 +426,28 @@ end
 
 # --- transforms
 
-# currently, only allowing scale, translate and rortate, and not sure about
-# those.  want to be able to confidently do translations ourselves (eg
-# ellipse code)
+# we only support (global!) conformal mapping - not general affine
+# transoforms.  this means that we can describe everything as a scale,
+# rotation and translation.  assuming that makes, for example, text
+# handling much simpler.
 
 Scale(factor) = Attribute("Scale", STAGE_DRAW, [ctx(c -> X.scale(c, factor, factor))], NO_ACTIONS)
 Translate(x, y) = Attribute("Translate", STAGE_DRAW, [ctx(c -> X.translate(c, x, y))], NO_ACTIONS)
 Rotate(degree) = Attribute("Rotate", STAGE_DRAW, [ctx(c -> X.rotate(c, deg2rad(degree)))], NO_ACTIONS)
 
+function describe_transform(c)
+    zero = X.device_to_user(c, 0, 0)
+    one = X.device_to_user(c, 1, 1)
+    dx, dy = one[1] - zero[1], one[2] - zero[2]
+    rotation = atan2(dy, dx) - pi / 4
+    scale = sqrt(dx*dx + dy*dy) / sqrt(2)
+    translation = zero
+    translation, scale, rotation
+end
+
 
 
 # --- (pango) text attributes
-
-#const FONT_SLANTS = Dict("normal" => X.FONT_SLANT_NORMAL,
-#                         "italic" => X.FONT_SLANT_ITALIC,
-#                         "oblique" => X.FONT_SLANT_OBLIQUE)
-#parse_slant(slant::Integer) = slant
-#parse_slant(slant::AbstractString) = lookup("font slant", FONT_SLANTS, slant)
-#
-#const FONT_WEIGHTS = Dict("normal" => X.FONT_WEIGHT_NORMAL,
-#                          "bold" => X.FONT_WEIGHT_BOLD)
-#parse_weight(weight::Integer) = weight
-#parse_weight(weight::AbstractString) = lookup("font weight", FONT_WEIGHTS, wei#ght)
-#
-#function set_font(c, family, slant, weight, size)
-#    family_now = Int[0]
-#    slant_now = Uint8[0]
-#    weight_now = Uint8[0]
-#    get_font_face(c, family_now, slant_now, size_now)
-#    println("now $(family_now) $(slant_now) $(weight_now)")
-#    X.set_font_face(family != nothing ? family : family_now,
-#                    slant != nothing ? parse_slant(slant) : slant_now,
-#                    weight != nothing ? parse_weight(weight) : weight_now)
-#    if (size != nothing)
-#        X.set_font_weight(c, size)
-#    end
-#end
-#
-#function Font(; family=nothing, slant=nothing, weight=nothing, size=nothing)
-#    Attribute("Font", STAGE_DRAW,
-#              [c -> set_font(c, family, slant, weight, size)],
-#              NO_ACTIONS)
-#end
 
 function to_font(fd::FontDescription)
     s = string(fd)
@@ -486,21 +468,69 @@ function print_fonts()
     end
 end
 
+const STYLES = Dict("normal" => PANGO_STYLE_NORMAL,
+                    "italic" => PANGO_STYLE_ITALIC,
+                    "oblique" => PANGO_STYLE_OBLIQUE)
+parse_style(style::AbstractString) = looup("font style", STYLES, style)
+parse_style(style::Integer) = style
+
+const VARIANTS = Dict("normal" => PANGO_VARIANT_NORMAL,
+                      "smallcaps" => PANGO_VARIANT_SMALL_CAPS)
+parse_variant(variant::AbstractString) = looup("font variant", VARIANTS, variant)
+parse_variant(variant::Integer) = variant
+
+const WEIGHTS = Dict("ultralight" => PANGO_WEIGHT_ULTRALIGHT,
+                     "light" => PANGO_WEIGHT_LIGHT,
+                     "normal" => PANGO_WEIGHT_NORMAL,
+                     "bold" => PANGO_WEIGHT_BOLD,
+                     "ultrabold" => PANGO_WEIGHT_ULTRABOLD,
+                     "heavy" => PANGO_WEIGHT_HEAVY)
+parse_weight(weight::AbstractString) = looup("font weight", WEIGHTS, weight)
+parse_weight(weight::Integer) = weight
+
+const STRETCHES = Dict("ultracondensed" => PANGO_STRETCH_ULTRA_CONDENSED,
+                       "extracondensed" => PANGO_STRETCH_EXTRA_CONDENSED,
+                       "condensed" => PANGO_STRETCH_CONDENSED,
+                       "semicondensed" => PANGO_STRETCH_SEMI_CONDENSED,
+                       "normal" => PANGO_STRETCH_NORMAL,
+                       "semiexpanded" => PANGO_STRETCH_SEMI_EXPANDED,
+                       "expanded" => PANGO_STRETCH_EXPANDED,
+                       "extraexpanded" => PANGO_STRETCH_EXTRA_EXPANDED,
+                       "ultraexpanded" => PANGO_STRETCH_ULTRA_EXPANDED)
+parse_stretch(stretch::AbstractString) = looup("font stretch", STRETCHES, stretch)
+parse_stretch(stretch::Integer) = stretch
+
+const GRAVITY = Dict("auto" => PANGO_GRAVITY_AUTO,
+                     "north" => PANGO_GRAVITY_NORTH,
+                     "east" => PANGO_GRAVITY_EAST,
+                     "south" => PANGO_GRAVITY_SOUTH,
+                     "west" => PANGO_GRAVITY_WEST)
+parse_gravity(gravity::AbstractString) = looup("font gravity", GRAVITY, gravity)
+parse_gravity(gravity::Integer) = gravity
+
 set_via(setter, value) = (c, a) -> setter(c.font[end].fd, value)
 
-function Font(desc; style=nothing, variant=nothing, weight=nothing, stretch=nothing, gravity=nothing, align=nothing)
+function Font(desc; size=nothing, style=nothing, variant=nothing, weight=nothing, stretch=nothing, gravity=nothing)
     Attribute("Font", STAGE_DRAW,
               vcat(desc != nothing ? [(c, a) -> c.font[end].fd = desc] : [],
+                   size != nothing ? [(c, a) -> c.font[end].size = size] : [],
                    style != nothing ? [set_via(set_style, parse_style(style))] : [],
                    variant != nothing ? [set_via(set_variant, parse_variant(variant))] : [],
                    weight != nothing ? [set_via(set_weight, parse_weight(weight))] : [],
                    stretch != nothing ? [set_via(set_stretch, parse_stretch(stretch))] : [],
-                   gravity != nothing ? [set_via(set_gravity, parse_gravity(gravity))] : [],
-                   align != nothing ? [(c, a) -> c.font[end].align = align] : []),
+                   gravity != nothing ? [set_via(set_gravity, parse_gravity(gravity))] : []),
               NO_ACTIONS)
 end
 
-Font(; style=nothing, variant=nothing, weight=nothing, stretch=nothing, gravity=nothing, align=nothing) = Font(nothing; style=style, weight=weight, stretch=stretch, gravity=gravity, align=align)
+Font(; size=nothing, style=nothing, variant=nothing, weight=nothing, stretch=nothing, gravity=nothing) = Font(nothing; size=size, style=style, weight=weight, stretch=stretch, gravity=gravity)
+
+function Layout(; align=nothing)
+    Attribute("Layout", STAGE_DRAW,
+              vcat(align != nothing ? [(c, a) -> c.font[end].align = align] : []),
+              NO_ACTIONS)
+end
+
+
 
 # --- paths
 
@@ -521,23 +551,34 @@ end
 
 function text(s)
     t = thread_context
+    f = t.font[end]
     c = get(t.context)
     l = Layout(c.layout)
+    tr, sc, rt = describe_transform(c)
 
+    # todo - maybe provide a flag to sckip this transform and let
+    # the user suffer whatever self-inflicted pain they want?
     X.save(c)
-    X.scale(c, 1, -1)
+    X.reset_transform(c)
     x, y = get_current_point(c)
 
     try
         
-        set_text(l, s)
-        set_description(l, t.font[end].fd)
+#        X.rotate(c, rt)
+
         update_layout(c, l)
+        if f.size > 0
+            set_absolute_size(f.fd, f.size / sc)
+        end
+        set_description(l, f.fd)
+#        println(s)
+        set_text(l, s)
 
         ink, log = get_pixel_extents(l)
         xalign = x - log.x - ((t.font[end].align - 1) % 3) * log.width / 2
         yalign = y - log.y - round((t.font[end].align-2)/3) * log.height / 2
         X.move_to(c, xalign, yalign)
+
         show_path(c, l)
 
     finally

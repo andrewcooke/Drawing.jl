@@ -26,5 +26,6 @@ function axes()
 end
 
 include("basics.jl")
+include("text.jl")
 include("errors.jl")
 include("towers.jl")

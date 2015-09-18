@@ -1,12 +1,44 @@
 
 import Base.==
 
-# at some point these should be a pull request for Cairo.jl
-# WARNING: verbs have been moved to the front of function names
+# at some point these should be a pull request for Cairo.jl?
 
 # this is a #define - no idea how to extract it dynamically
 # https://developer.gnome.org/pango/stable/pango-Glyph-Storage.html#PANGO-SCALE:CAPS
 const PANGO_SCALE = 1024
+
+# these are enums - again, no idea how to read
+# https://people.redhat.com/otaylor/pango-mirror/api/pango-fonts.html#PANGOSTYLE
+const PANGO_STYLE_NORMAL = 0
+const PANGO_STYLE_ITALIC = 1
+const PANGO_STYLE_OBLIQUE = 2
+# https://people.redhat.com/otaylor/pango-mirror/api/pango-fonts.html#PANGOVARIANT
+const PANGO_VARIANT_NORMAL = 0
+const PANGO_VARIANT_SMALL_CAPS = 1
+# https://developer.gnome.org/pygtk/stable/class-pangofontdescription.html#method-pangofontdescription--set-weight
+# any value from 100-900
+const PANGO_WEIGHT_ULTRALIGHT = 200
+const PANGO_WEIGHT_LIGHT = 300
+const PANGO_WEIGHT_NORMAL = 400
+const PANGO_WEIGHT_BOLD = 700
+const PANGO_WEIGHT_ULTRABOLD = 800
+const PANGO_WEIGHT_HEAVY = 900
+# https://people.redhat.com/otaylor/pango-mirror/api/pango-fonts.html#PANGOSTRETCH
+const PANGO_STRETCH_ULTRA_CONDENSED = 0
+const PANGO_STRETCH_EXTRA_CONDENSED = 1
+const PANGO_STRETCH_CONDENSED = 2
+const PANGO_STRETCH_SEMI_CONDENSED = 3
+const PANGO_STRETCH_NORMAL = 4
+const PANGO_STRETCH_SEMI_EXPANDED = 5
+const PANGO_STRETCH_EXPANDED = 6
+const PANGO_STRETCH_EXTRA_EXPANDED = 7
+const PANGO_STRETCH_ULTRA_EXPANDED = 8
+# http://sourcecodebrowser.com/pango1.0/1.22.1/pango-gravity_8h.html#ab9f9c35c3778c1ca07195d6687a83e9c
+const PANGO_GRAVITY_SOUTH = 0
+const PANGO_GRAVITY_EAST = 1
+const PANGO_GRAVITY_NORTH = 2
+const PANGO_GRAVITY_WEST = 3
+const PANGO_GRAVITY_AUTO = 4
 
 function has_current_point(ctx::X.CairoContext)
     ccall((:cairo_has_current_point, X._jl_libcairo), Int, (Ptr{Void},), ctx.ptr) != 0
@@ -113,7 +145,7 @@ function Base.copy(fd::FontDescription)
     FontDescription(ccall((:pango_font_description_copy, X._jl_libpango), Ptr{Void}, (Ptr{Void},), fd.ptr))
 end
 
-for name in [:style, :variant, :weight, :stretch, :gravity]
+for name in [:style, :variant, :weight, :stretch, :gravity, :size]
     g1 = symbol(:get_, name)
     g2 = symbol(:pango_font_description_, g1)
     s1 = symbol(:set_, name)
@@ -122,6 +154,14 @@ for name in [:style, :variant, :weight, :stretch, :gravity]
         $g1(fd::FontDescription) = ccall(($(Expr(:quote, g2)), X._jl_libpango), Culong, (Ptr{Void},), fd.ptr)
         $s1(fd::FontDescription, x) = ccall(($(Expr(:quote, s2)), X._jl_libpango), Void, (Ptr{Void}, Culong), fd.ptr, x)
     end
+end
+
+function set_absolute_size(fd::FontDescription, size)
+    ccall((:pango_font_description_set_absolute_size, X._jl_libpango), Void, (Ptr{Void}, Cdouble), fd.ptr, size * PANGO_SCALE)
+end
+
+function get_absolute_size(fd::FontDescription, size)
+    ccall((:pango_font_description_get_absolute_size, X._jl_libpango), Cdouble, (Ptr{Void},), fd.ptr) / PANGO_SCALE
 end
 
 immutable Layout
