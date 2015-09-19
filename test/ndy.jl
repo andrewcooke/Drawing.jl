@@ -5,7 +5,7 @@ p = 1.02
 q = 0.9375
 
 with(
-#     PNG("align.png", 300, 150), 
+#     PNG("ndy.png", 300, 300), 
      TK(300, 300), 
      Axes(centred=true)) do
          paint(Ink("darkgreen")) do

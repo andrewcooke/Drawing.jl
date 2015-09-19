@@ -7,6 +7,7 @@
 # - actions that take lists of points (or generators?)
 # - other shapes
 # - align consistent
+# - asymmetric scaling of text?
 
 module Drawing
 
@@ -378,10 +379,9 @@ function set_coords(c, scale, border, centred)
                      -scale * nx / u, scale * nx / u,
                      scale * ny / u, -scale * ny / u)
     else
-        # so x is -0.25 to 1.25
         G.set_coords(c, 0, 0, nx, ny,
-                     -scale * (nx - u) / 2u, scale * (nx + u) / 2u,
-                     scale * (ny - u) / 2u, scale * (ny + u) / 2u)
+                     -scale * b / u, scale * (nx - b) / u,
+                     scale * (ny - b) / u, -scale * b / u)
     end
 end
 
@@ -443,7 +443,7 @@ function describe_transform(c)
     one = X.device_to_user(c, 1, 1)
     dx, dy = one[1] - zero[1], one[2] - zero[2]
     # weird sign below because reflected in y
-    rotation = atan2(dy, dx) + pi / 4
+    rotation = atan2(-dy, dx) - pi/4
     scale = sqrt(dx*dx + dy*dy) / sqrt(2)
     translation = zero
     translation, scale, rotation
@@ -548,11 +548,20 @@ function circle(radius; from=0, to=360)
     X.move_to(c, x, y)  # don't change current point
 end
 
-# if (x, y) is the current point then this gives the top left coords
-# of the box with (width, height) so that it is aligned correctly
+# if (x, y) is the bottom left point of the box, then this returns an
+# (x,y) that should be the new bottom-left point, such that the box
+# appears aligned correctly relative to the given point(!)
+# to make things more exciting, height should be negated when using the
+# 'y goes down' convention (ie from pango), and then everything is 
+# relative to top left.
 function alignment(x, y, align, width, height)
     xalign = x - ((align - 1) % 3) * width / 2
-    yalign = y - round((align - 2) / 3) * height / 2
+    if height > 0
+        yalign = y + height - round((align - 2) / 3) * height / 2
+    else
+        yalign = y + round((align - 2) / 3) * height / 2
+    end
+    println("align $align $x $y -> $(xalign) $(yalign)")
     xalign, yalign
 end
 
@@ -582,7 +591,8 @@ function text(s; align=align)
         set_text(l, s)
 
         ink, log = get_pixel_extents(l)
-        X.move_to(c, alignment(x - log.x, y-log.y, align, log.width, log.height)...)
+        # -height because y axis is inverted
+        X.move_to(c, alignment(x-log.x, y-log.y, align, log.width, -log.height)...)
 
         show_path(c, l)
 

@@ -5,8 +5,8 @@ d = 0.05
 k = 2
 
 with(
-#     PNG("align.png", 300, 150), 
-     TK(300, 150), 
+     PNG("align.png", 300, 150), 
+#     TK(300, 150), 
      Axes(centred=true, scale=0.5)) do
     for align in 1:9
         x = k * ((align + 2) % 3 - 1) / 2

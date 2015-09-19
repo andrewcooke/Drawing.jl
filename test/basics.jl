@@ -45,27 +45,15 @@ ignore || compare("butt-mitre.png")
 include("square-bevel.jl")
 ignore || compare("square-bevel.png")
 
-#function square()
-#    move(0, 0)
-#    line(1, 0)
-#    line(1, 1)
-#    line(0, 1)
-#    line(0, 0)
-#end
-
-#draw(square, PNG("square.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, "lightgrey"))
 include("square.jl")
 ignore || compare("square.png")
 
-#draw(square, PNG("square-scale.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, "lightgrey"), Scale(0.5))
 include("square-scale.jl")
 ignore || compare("square-scale.png")
 
-#draw(square, PNG("square-scale-translate.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, "lightgrey"), Scale(0.5), Translate(1, 1))
 include("square-scale-translate.jl")
 ignore || compare("square-scale-translate.png")
 
-#draw(square, PNG("square-rotate.png"), Paper("a10"; dpi=100, orientation="landscape", border=0.1, "lightgrey"), Rotate(45))
 include("square-rotate.jl")
 ignore || compare("square-rotate.png")
 
