@@ -1,10 +1,12 @@
 
 # TODO
+# - transparency
 # - fancy sources
-# - text
+# - text layout attributes
 # - ellipses, bezier curves or similar
 # - actions that take lists of points (or generators?)
-
+# - other shapes
+# - align consistent
 
 module Drawing
 
@@ -13,13 +15,12 @@ import Graphics; const G = Graphics
 import Colors; const C = Colors
 import Tk; const T = Tk
 
-export DrawingError, has_current_point, get_current_point, 
+export DrawingError,
        current_context,
        with, cairo, draw, paint,
        cm, mm, in, pts, rad, deg,
        PNG, PDF, TK, Paper, Axes, Pen, Ink, Scale, Translate, Rotate, Font,
-       Layout,
-       move, line, circle, text,
+       move, line, circle, text, rectangle, square,
        print_fonts
 
 # add additional calls to cairo
@@ -362,23 +363,25 @@ function Axes(; scale=1, border=0.1, centred=false)
 end
 
 function set_coords(c, scale, border, centred)
+
     nx, ny = X.width(c.surface), X.height(c.surface)
+    portrait = nx < ny
+    sm, lg = portrait ? (nx, ny) : (ny, nx)
+    b = border * sm
+    u = sm - 2 * b
+
+    # if portrait, and nx = 10, scale = 2, border = 0.1, then we have
+    # a border b = 1, used u = 8
     if centred
-        d = scale / (1 - 2*border)
-        b = (d - scale) / scale
-        if nx < ny  # portrait
-            G.set_coords(c, 0, 0, nx, ny, -scale-b, scale+b, scale*(ny/nx)+b, -scale*(ny/nx)-b)
-        else
-            G.set_coords(c, 0, 0, nx, ny, -scale*(nx/ny)-b, scale*(nx/ny)+b, scale+b, -scale-b)
-        end
+        # so x is -2.5 to 2.5
+        G.set_coords(c, 0, 0, nx, ny, 
+                     -scale * nx / u, scale * nx / u,
+                     scale * ny / u, -scale * ny / u)
     else
-        d = scale / (1 - 2*border)
-        b = (d - scale) / 2
-        if nx < ny  # portrait
-            G.set_coords(c, 0, 0, nx, ny, -b, scale+b, scale*(ny/nx)*d - b, -b)
-        else
-            G.set_coords(c, 0, 0, nx, ny, -b, scale*(nx/ny)*d - b, scale+b, -b)
-        end
+        # so x is -0.25 to 1.25
+        G.set_coords(c, 0, 0, nx, ny,
+                     -scale * (nx - u) / 2u, scale * (nx + u) / 2u,
+                     scale * (ny - u) / 2u, scale * (ny + u) / 2u)
     end
 end
 
@@ -439,7 +442,8 @@ function describe_transform(c)
     zero = X.device_to_user(c, 0, 0)
     one = X.device_to_user(c, 1, 1)
     dx, dy = one[1] - zero[1], one[2] - zero[2]
-    rotation = atan2(dy, dx) - pi / 4
+    # weird sign below because reflected in y
+    rotation = atan2(dy, dx) + pi / 4
     scale = sqrt(dx*dx + dy*dy) / sqrt(2)
     translation = zero
     translation, scale, rotation
@@ -457,6 +461,7 @@ end
 function print_fonts()
     fm = get_font_map_default()
     ff = list_families(fm)
+    sort!(ff, by=(f-> get_name(f)))
     for f in ff
         m = is_monospace(f) ? "[monospace]" : ""
         println("\n  $(get_name(f)) $m")
@@ -471,12 +476,12 @@ end
 const STYLES = Dict("normal" => PANGO_STYLE_NORMAL,
                     "italic" => PANGO_STYLE_ITALIC,
                     "oblique" => PANGO_STYLE_OBLIQUE)
-parse_style(style::AbstractString) = looup("font style", STYLES, style)
+parse_style(style::AbstractString) = lookup("font style", STYLES, style)
 parse_style(style::Integer) = style
 
 const VARIANTS = Dict("normal" => PANGO_VARIANT_NORMAL,
                       "smallcaps" => PANGO_VARIANT_SMALL_CAPS)
-parse_variant(variant::AbstractString) = looup("font variant", VARIANTS, variant)
+parse_variant(variant::AbstractString) = lookup("font variant", VARIANTS, variant)
 parse_variant(variant::Integer) = variant
 
 const WEIGHTS = Dict("ultralight" => PANGO_WEIGHT_ULTRALIGHT,
@@ -485,7 +490,7 @@ const WEIGHTS = Dict("ultralight" => PANGO_WEIGHT_ULTRALIGHT,
                      "bold" => PANGO_WEIGHT_BOLD,
                      "ultrabold" => PANGO_WEIGHT_ULTRABOLD,
                      "heavy" => PANGO_WEIGHT_HEAVY)
-parse_weight(weight::AbstractString) = looup("font weight", WEIGHTS, weight)
+parse_weight(weight::AbstractString) = lookup("font weight", WEIGHTS, weight)
 parse_weight(weight::Integer) = weight
 
 const STRETCHES = Dict("ultracondensed" => PANGO_STRETCH_ULTRA_CONDENSED,
@@ -497,7 +502,7 @@ const STRETCHES = Dict("ultracondensed" => PANGO_STRETCH_ULTRA_CONDENSED,
                        "expanded" => PANGO_STRETCH_EXPANDED,
                        "extraexpanded" => PANGO_STRETCH_EXTRA_EXPANDED,
                        "ultraexpanded" => PANGO_STRETCH_ULTRA_EXPANDED)
-parse_stretch(stretch::AbstractString) = looup("font stretch", STRETCHES, stretch)
+parse_stretch(stretch::AbstractString) = lookup("font stretch", STRETCHES, stretch)
 parse_stretch(stretch::Integer) = stretch
 
 const GRAVITY = Dict("auto" => PANGO_GRAVITY_AUTO,
@@ -505,7 +510,7 @@ const GRAVITY = Dict("auto" => PANGO_GRAVITY_AUTO,
                      "east" => PANGO_GRAVITY_EAST,
                      "south" => PANGO_GRAVITY_SOUTH,
                      "west" => PANGO_GRAVITY_WEST)
-parse_gravity(gravity::AbstractString) = looup("font gravity", GRAVITY, gravity)
+parse_gravity(gravity::AbstractString) = lookup("font gravity", GRAVITY, gravity)
 parse_gravity(gravity::Integer) = gravity
 
 set_via(setter, value) = (c, a) -> setter(c.font[end].fd, value)
@@ -523,12 +528,6 @@ function Font(desc; size=nothing, style=nothing, variant=nothing, weight=nothing
 end
 
 Font(; size=nothing, style=nothing, variant=nothing, weight=nothing, stretch=nothing, gravity=nothing) = Font(nothing; size=size, style=style, weight=weight, stretch=stretch, gravity=gravity)
-
-function Layout(; align=nothing)
-    Attribute("Layout", STAGE_DRAW,
-              vcat(align != nothing ? [(c, a) -> c.font[end].align = align] : []),
-              NO_ACTIONS)
-end
 
 
 
@@ -549,35 +548,41 @@ function circle(radius; from=0, to=360)
     X.move_to(c, x, y)  # don't change current point
 end
 
-function text(s)
+# if (x, y) is the current point then this gives the top left coords
+# of the box with (width, height) so that it is aligned correctly
+function alignment(x, y, align, width, height)
+    xalign = x - ((align - 1) % 3) * width / 2
+    yalign = y - round((align - 2) / 3) * height / 2
+    xalign, yalign
+end
+
+function text(s; align=align)
+
     t = thread_context
     f = t.font[end]
     c = get(t.context)
-    l = Layout(c.layout)
+    l = Layout(c.layout)    # our pango routines use wrapper
     tr, sc, rt = describe_transform(c)
 
-    # todo - maybe provide a flag to sckip this transform and let
-    # the user suffer whatever self-inflicted pain they want?
+    # todo - maybe provide a flag to skip this transform and let the
+    # user suffer whatever self-inflicted pain they want?
     X.save(c)
     X.reset_transform(c)
+    X.rotate(c, rt)
     x, y = get_current_point(c)
 
     try
         
-#        X.rotate(c, rt)
-
         update_layout(c, l)
         if f.size > 0
             set_absolute_size(f.fd, f.size / sc)
         end
         set_description(l, f.fd)
-#        println(s)
+
         set_text(l, s)
 
         ink, log = get_pixel_extents(l)
-        xalign = x - log.x - ((t.font[end].align - 1) % 3) * log.width / 2
-        yalign = y - log.y - round((t.font[end].align-2)/3) * log.height / 2
-        X.move_to(c, xalign, yalign)
+        X.move_to(c, alignment(x - log.x, y-log.y, align, log.width, log.height)...)
 
         show_path(c, l)
 
@@ -587,9 +592,26 @@ function text(s)
     end
 end
 
+function rectangle(width, height; align=1)
+    c = current_context()
+    x, y = get_current_point(c)
+    try
+        a, b = alignment(x, y, align, width, height)
+        X.move_to(c, a, b)
+        X.line_to(c, a+width, b)
+        X.line_to(c, a+width, b+height)
+        X.line_to(c, a, b+height)
+        X.line_to(c, a, b)
+    finally
+        X.move_to(c, x, y)
+    end
+end
 
+function square(side; align=1)
+    rectangle(side, side; align=align)
+end
 
-# --- defaults duing startup (working through the stages)
+# --- defaults during startup (working through the stages)
 
 DEFAULT_ATTRIBUTES = Dict(STAGE_OUTPUT => TK(300, 200),
                           STAGE_PAPER => Paper(WHITE),

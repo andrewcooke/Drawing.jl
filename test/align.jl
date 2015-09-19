@@ -2,12 +2,12 @@
 using Drawing
 
 d = 0.05
-k = 2.5
+k = 2
 
 with(
 #     PNG("align.png", 300, 150), 
      TK(300, 150), 
-     Axes(centred=true, border=-0.3)) do
+     Axes(centred=true, scale=0.5)) do
     for align in 1:9
         x = k * ((align + 2) % 3 - 1) / 2
         y = (1 - round((align - 2) / 3)) / 2
@@ -18,8 +18,8 @@ with(
             line(x, y+d)
             move(x, y)
         end
-        paint(Layout(align=align), Font(size=0.2)) do
-            text("align=$(align)")
+        paint(Font(size=0.2)) do
+            text("align=$(align)"; align=align)
         end
     end
 end
