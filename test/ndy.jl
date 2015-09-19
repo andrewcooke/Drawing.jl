@@ -5,8 +5,8 @@ p = 1.02
 q = 0.9375
 
 with(
-#     PNG("ndy.png", 300, 300), 
-     TK(300, 300), 
+     PNG("ndy.png", 300, 300), 
+#     TK(300, 300), 
      Axes(centred=true)) do
          paint(Ink("darkgreen")) do
              square(100, align=5)

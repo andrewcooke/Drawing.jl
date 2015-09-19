@@ -557,7 +557,7 @@ end
 function alignment(x, y, align, width, height)
     xalign = x - ((align - 1) % 3) * width / 2
     if height > 0
-        yalign = y + height - round((align - 2) / 3) * height / 2
+        yalign = y - height + round((align - 2) / 3) * height / 2
     else
         yalign = y + round((align - 2) / 3) * height / 2
     end
