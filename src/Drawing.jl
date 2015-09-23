@@ -8,6 +8,8 @@
 # - other shapes
 # - align consistent
 # - asymmetric scaling of text?
+# - rotation only as a keyword arg for shapes?
+# - axes shifting separate from scale / shift?
 
 module Drawing
 
@@ -443,7 +445,7 @@ function describe_transform(c)
     one = X.device_to_user(c, 1, 1)
     dx, dy = one[1] - zero[1], one[2] - zero[2]
     # weird sign below because reflected in y
-    rotation = atan2(-dy, dx) - pi/4
+    rotation = pi/4 - atan2(-dy, dx)
     scale = sqrt(dx*dx + dy*dy) / sqrt(2)
     translation = zero
     translation, scale, rotation
@@ -561,11 +563,10 @@ function alignment(x, y, align, width, height)
     else
         yalign = y + round((align - 2) / 3) * height / 2
     end
-    println("align $align $x $y -> $(xalign) $(yalign)")
     xalign, yalign
 end
 
-function text(s; align=align)
+function text(s; align=1)
 
     t = thread_context
     f = t.font[end]
