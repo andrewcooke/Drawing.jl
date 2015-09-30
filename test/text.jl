@@ -9,7 +9,7 @@ ignore || compare("ndy.png")
 
 paint(PNG("text-rotate.png", 100, 100), 
       Axes(centred=true), 
-      Font(size=0.5), Rotate(30)) do
-    text("abcdefg"; align=4)
+      Font(size=0.5)) do
+    text("abcdefg"; align=4, rotate=30)
 end
 ignore || compare("text-rotate.png")

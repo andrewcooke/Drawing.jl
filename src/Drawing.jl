@@ -22,7 +22,7 @@ export DrawingError,
        current_context,
        with, cairo, draw, paint,
        cm, mm, in, pts, rad, deg,
-       PNG, PDF, TK, Paper, Axes, Pen, Ink, Scale, Translate, Rotate, Font,
+       PNG, PDF, TK, Paper, Axes, Pen, Ink, Scale, Translate, Font,
        move, line, circle, text, rectangle, square,
        print_fonts
 
@@ -431,25 +431,14 @@ end
 
 # --- transforms
 
-# we only support (global!) conformal mapping - not general affine
-# transoforms.  this means that we can describe everything as a scale,
-# rotation and translation.  assuming that makes, for example, text
-# handling much simpler.
+# this is much, much more limited that raw cairo.  and may be reduced further,
+# so that all you can do is specify new axes on some sub-region.
+
+# instead, individual commands support rotation and scaling in varius ways.
 
 Scale(factor) = Attribute("Scale", STAGE_DRAW, [ctx(c -> X.scale(c, factor, factor))], NO_ACTIONS)
 Translate(x, y) = Attribute("Translate", STAGE_DRAW, [ctx(c -> X.translate(c, x, y))], NO_ACTIONS)
-Rotate(degree) = Attribute("Rotate", STAGE_DRAW, [ctx(c -> X.rotate(c, deg2rad(degree)))], NO_ACTIONS)
 
-function describe_transform(c)
-    zero = X.device_to_user(c, 0, 0)
-    one = X.device_to_user(c, 1, 1)
-    dx, dy = one[1] - zero[1], one[2] - zero[2]
-    # weird sign below because reflected in y
-    rotation = pi/4 - atan2(-dy, dx)
-    scale = sqrt(dx*dx + dy*dy) / sqrt(2)
-    translation = zero
-    translation, scale, rotation
-end
 
 
 
@@ -542,14 +531,6 @@ end
 @lift(move, X.move_to)
 @lift(line, X.line_to)
 
-function circle(radius; from=0, to=360)
-    c = current_context()
-    x, y = get_current_point(c)
-    X.new_sub_path(c)
-    X.arc(c, x, y, radius, deg2rad(from), deg2rad(to))
-    X.move_to(c, x, y)  # don't change current point
-end
-
 # if (x, y) is the bottom left point of the box, then this returns an
 # (x,y) that should be the new bottom-left point, such that the box
 # appears aligned correctly relative to the given point(!)
@@ -566,20 +547,37 @@ function alignment(x, y, align, width, height)
     xalign, yalign
 end
 
-function text(s; align=1)
+# TODO - ellipse + rotate
+# TODO - more useful arcs joining lines etc
+function circle(radius; from=0, to=360, align=5)
+    c = current_context()
+    x, y = get_current_point(c)
+    X.new_sub_path(c)
+    X.arc(c, x, y, radius, deg2rad(from), deg2rad(to))
+    X.move_to(c, x, y)  # don't change current point
+end
+
+function get_current_scale(c)
+    zero = X.device_to_user(c, 0, 0)
+    one = X.device_to_user(c, 1, 1)
+    dx, dy = one[1] - zero[1], one[2] - zero[2]
+    sqrt(dx*dx + dy*dy) / sqrt(2)
+end
+
+function text(s; align=1, rotate=0)
 
     t = thread_context
     f = t.font[end]
     c = get(t.context)
     l = Layout(c.layout)    # our pango routines use wrapper
-    tr, sc, rt = describe_transform(c)
 
     # todo - maybe provide a flag to skip this transform and let the
     # user suffer whatever self-inflicted pain they want?
+    x, y = get_current_point(c)
+    sc = get_current_scale(c)
     X.save(c)
     X.reset_transform(c)
-    X.rotate(c, rt)
-    x, y = get_current_point(c)
+    X.rotate(c, deg2rad(rotate))
 
     try
         
@@ -603,24 +601,31 @@ function text(s; align=1)
     end
 end
 
-function rectangle(width, height; align=1)
+function rectangle(width, height; align=1, rotate=0)
     c = current_context()
     x, y = get_current_point(c)
+    X.save(c)
     try
         a, b = alignment(x, y, align, width, height)
+        X.rotate(c, deg2rad(rotate))
         X.move_to(c, a, b)
         X.line_to(c, a+width, b)
         X.line_to(c, a+width, b+height)
         X.line_to(c, a, b+height)
         X.line_to(c, a, b)
     finally
+        X.restore(c)
         X.move_to(c, x, y)
     end
 end
 
-function square(side; align=1)
-    rectangle(side, side; align=align)
+function square(side; align=1, rotate=0)
+    rectangle(side, side; align=align, rotate=rotate)
 end
+
+# TODO - more shapes, including general polyogns and triangls.
+
+
 
 # --- defaults during startup (working through the stages)
 
