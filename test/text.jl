@@ -1,8 +1,8 @@
 
-ignore = true  # when re-generating
+ignore = false  # when re-generating
 
-include("align.jl")
-ignore || compare("align.png")
+include("text-align.jl")
+ignore || compare("text-align.png")
 
 include("ndy.jl")
 ignore || compare("ndy.png")

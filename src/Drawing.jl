@@ -573,11 +573,11 @@ function text(s; align=1, rotate=0)
 
     # todo - maybe provide a flag to skip this transform and let the
     # user suffer whatever self-inflicted pain they want?
-    x, y = get_current_point(c)
     sc = get_current_scale(c)
     X.save(c)
     X.reset_transform(c)
-    X.rotate(c, deg2rad(rotate))
+    X.rotate(c, -deg2rad(rotate))
+    x, y = get_current_point(c)
 
     try
         
