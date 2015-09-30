@@ -549,7 +549,7 @@ end
 
 # TODO - ellipse + rotate
 # TODO - more useful arcs joining lines etc
-function circle(radius; from=0, to=360, align=5)
+function circle(radius; from=0, to=360)
     c = current_context()
     x, y = get_current_point(c)
     X.new_sub_path(c)
