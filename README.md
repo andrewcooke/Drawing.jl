@@ -211,7 +211,6 @@ the scope, from left to right.
   [![default](test/target/square.png)](test/square.jl)
   [![scale](test/target/square-scale.png)](test/square-scale.jl)
   [![scale+translate](test/target/square-scale-translate.png)](test/square-scale-translate.jl)
-  [![rotate](test/target/square-rotate.png)](test/square-rotate.jl)
 
   *Click on image to see associated script.*
 
@@ -237,3 +236,4 @@ Currently, all actions affect the Cairo path.
   relative to the current point using the "telephone pad" align (1 is top
   left, 9 is bottom right).
 
+  [![align](test/target/text-align.png)](test/text-align.jl)
