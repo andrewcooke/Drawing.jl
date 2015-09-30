@@ -47,7 +47,6 @@ const pts = in/72
 # similarly for angles (convert to degrees)
 const rad = 180/pi
 const deg = 1
-deg2rad(x) = x*pi/180
 
 int(x) = round(Int, x)
 
@@ -62,7 +61,7 @@ function lookup(name, table, value::AbstractString)
 end
 
 parse_color(c::AbstractString) = parse(C.Colorant, c)
-parse_color(c::C.Color) = c
+parse_color(c::C.Colorant) = c
 
 const RED = parse_color("red")
 const GREEN = parse_color("green")
