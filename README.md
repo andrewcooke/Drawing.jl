@@ -236,4 +236,9 @@ Currently, all actions affect the Cairo path.
   relative to the current point using the "telephone pad" align (1 is top
   left, 9 is bottom right).
 
+To clarify the `align` parameter, here are some text paths, align to the
+nearest orange cross.
+
   [![align](test/target/text-align.png)](test/text-align.jl)
+
+*Click on image to see associated script.*
