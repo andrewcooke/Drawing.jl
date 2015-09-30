@@ -228,9 +228,13 @@ Currently, all actions affect the Cairo path.
   creates an arc (incomplete circle, with angles measured anti-clockwise from
   the x axis, in degrees).
 
-* `rectangle(wdth, height; align=1, rotate=0)` create a rectangle, rotated and
-  placed relative to the current point using the "telephone pad" align (1 is
-  top left, 9 is bottom right).
+* `rectangle(width, height; align=1, rotate=0)` create a rectangle, rotated
+  and placed relative to the current point using the "telephone pad" align (1
+  is top left, 9 is bottom right).
+
+* `square(side; align=1, rotate=0)` create a square, rotated and placed
+  relative to the current point using the "telephone pad" align (1 is top
+  left, 9 is bottom right).
 
 * `text(s; align=1, rotate=0)` create the given text, rotated and placed
   relative to the current point using the "telephone pad" align (1 is top
