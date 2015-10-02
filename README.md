@@ -63,10 +63,8 @@ julia> using ColorTypes
 julia> r1, r2, r3, n, w = 1, 1, 0.5, 200, 0.5
 julia> d1, d2, rotn = 120, -140, 40
 julia> sat, val, alpha = 0.7, 0.5, 0.1
-julia> side = 600
 julia> width = 2*pi*r1 / n * w
-julia> with(TK(side, side), 
-		   Axes(centred=true),
+julia> with(Axes(centred=true),
 		   Translate(0.9, 0.9), Scale(3),
 		   Paper("black"),
 		   Pen(width; cap="round")) do

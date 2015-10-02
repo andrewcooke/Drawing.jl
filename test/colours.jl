@@ -13,8 +13,7 @@ width = 2*pi*r1 / n * w
 srand(0)
 
 with(
-#     PNG("colour-ring.png", side, side), 
-     TK(side, side), 
+     PNG("colour-ring.png", side, side), 
      Axes(centred=true),
      Translate(0.9, 0.9), Scale(3),
      Paper("black"),
