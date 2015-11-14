@@ -290,8 +290,9 @@ end
 # width and heigh are in mm
 function PDF(path, width_mm, height_mm)
     Attribute("PDF", STAGE_OUTPUT,
-              with_defaults([(c, a) -> c.context = X.CairoContext(X.CairoPDFSurface("formats.pdf", width_mm/pts, height_mm/pts))]),
-              [ctx(c -> X.destroy(c))])
+              with_defaults([(c, a) -> c.context = X.CairoContext(X.CairoPDFSurface(patch, width_mm/pts, height_mm/pts))]),
+              [ctx(c -> X.finish(c.surface)),
+               ctx(c -> X.destroy(c))])
 end
 
 function PDF(path; size="a4", orientation=LANDSCAPE)
