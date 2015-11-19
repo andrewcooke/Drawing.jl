@@ -12,8 +12,8 @@ MAX_DIFF = 8
 
 function compare(name)
     print("$(name): ")
-    im1 = imread(name)
-    im2 = imread("target/$(name)")
+    im1 = load(name)
+    im2 = load("target/$(name)")
     @test size(im1) == size(im2)
     for c in zip(im1, im2)
         c1, c2 = c

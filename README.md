@@ -1,5 +1,15 @@
 [![Build Status](https://travis-ci.org/andrewcooke/Drawing.jl.svg?branch=master)](https://travis-ci.org/andrewcooke/Drawing.jl)
 
+## Warning:
+
+Currently (Nov 2015) Julia graphics libs seem to be in a mess.  I had
+a really bad time just getting basic dependencies installed and
+running.  As far as I can tell this isn't my library's fault.  Sorry!
+
+Also, you need to use the development version of the Tk package to
+avoid deprecation errors
+(`Pkg.clone("git@github.com:JuliaLang/Tk.jl.git")` or similar).
+
 # Drawing
 
 * [Introduction](#introduction)
