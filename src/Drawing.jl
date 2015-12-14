@@ -21,7 +21,7 @@ import Tk; const T = Tk
 export DrawingError,
        current_context,
        with, cairo, draw, paint,
-       cm, mm, in, pts, rad, deg,
+       cm, mm, inch, pts, rad, deg,
        PNG, PDF, TK, Paper, Axes, Pen, Ink, Scale, Translate, Font,
        move, line, circle, text, rectangle, square,
        print_fonts
@@ -41,8 +41,8 @@ Base.showerror(io::IO, e::DrawingError) = print(io, e.msg)
 # allow sizes to be given as 30cm etc (convert to mm)
 const cm = 10
 const mm = 1
-const in = 25.4
-const pts = in/72
+const inch = 25.4
+const pts = inch/72
 
 # similarly for angles (convert to degrees)
 const rad = 180/pi
