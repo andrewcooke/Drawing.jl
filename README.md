@@ -215,7 +215,7 @@ the scope, from left to right.
   whole page.
 
   [![portrait](test/target/portrait.png)](test/portrait.jl)
-  [![landscape, centred](test/target/centred-landscape.png)](test/centred-landscape.jl)
+  [![landscape, negative](test/target/negative-landscape.png)](test/negative-landscape.jl)
 
   *Click on image to see associated script.*
 
