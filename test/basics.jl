@@ -59,3 +59,25 @@ ignore || compare("orange-blue-square.png")
 
 include("red-blue-square.jl")
 ignore || compare("red-blue-square.png")
+
+with(PNG("cross-left.png", 140, 100), 
+     Axes(centred=false, negative=true)) do
+    draw() do
+        move(-1.0, 0.0)
+        line(1.0, 0.0)
+        move(0.0, -1.0)
+        line(0.0, 1.0)
+    end
+end
+ignore || compare("cross-left.png")
+
+with(PNG("cross-bottom.png", 100, 140), 
+     Axes(centred=false, negative=true)) do
+    draw() do
+        move(-1.0, 0.0)
+        line(1.0, 0.0)
+        move(0.0, -1.0)
+        line(0.0, 1.0)
+    end
+end
+ignore || compare("cross-bottom.png")

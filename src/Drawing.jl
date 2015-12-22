@@ -381,25 +381,21 @@ function set_coords(c, scale, border, centred, negative)
     # used (non-border) lengths
     ux = nx - 2 * b
     uy = ny - 2 * b
-    println("ux $(ux) uy $(uy)")
-    println("scale $(scale)")
     sc = max(scale[1] / ux, scale[2] / uy)
-    println("sc $(sc) sc*ux $(sc*ux) sc*uy $(sc*uy)")
 
     if centred
         if negative
             G.set_coords(c, 0, 0, nx, ny, -sc*nx, sc*nx, sc*ny, -sc*ny)
         else
             dx, dy = scale[1]-sc*ux, scale[2]-sc*uy
-            println("dx $dx dy $dy")
             G.set_coords(c, 0, 0, nx, ny, -sc*b+dx/2, sc*(nx-b)+dx/2, 
                          sc*(ny-b)+dy/2, -sc*b+dy/2)
         end
     else
         if negative
             dx, dy = scale[1]-sc*ux, scale[2]-sc*uy
-            G.set_coords(c, 0, 0, nx, ny, -sc*nx+dx/2, sc*nx+dx/2, 
-                         sc*ny+dy/2, -sc*ny+dy/2)
+            G.set_coords(c, 0, 0, nx, ny, -sc*nx-dx, sc*nx-dx, 
+                         sc*ny-dy, -sc*ny-dy)
         else
             G.set_coords(c, 0, 0, nx, ny, -sc*b, sc*(nx-b), sc*(ny-b), -sc*b)
         end
