@@ -209,10 +209,10 @@ the scope, from left to right.
   scale is chosen so that both those scales fit within the plotting
   area (but pixels remain square).
 
-  Below are plotted unit axes (x is horizontal) for 100x140 pixel images, with
-  a border of 0.1 (ie 10 pixels), where the landscape axes are centred.  Note
-  that drawing is not clipped to the unit axes area - it can extend over the
-  whole page.
+  Below are plotted unit axes (x is horizontal) for 100x140 pixel
+  images, with a border of 0.1 (ie 10 pixels), where the landscape
+  axes extend to negative values.  Note that drawing is not clipped to
+  the unit axes area - it can extend over the whole page.
 
   [![portrait](test/target/portrait.png)](test/portrait.jl)
   [![landscape, negative](test/target/negative-landscape.png)](test/negative-landscape.jl)
