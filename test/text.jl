@@ -9,7 +9,7 @@ include("ndy.jl")
 ignore || compare("ndy.png")
 
 paint(PNG("text-rotate.png", 100, 100), 
-      Axes(centred=true), 
+      Axes(negative=true), 
       Font(size=0.5)) do
     text("abcdefg"; align=4, rotate=30)
 end

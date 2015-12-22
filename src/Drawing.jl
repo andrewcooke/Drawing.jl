@@ -301,10 +301,11 @@ function PDF(path; size="a4", orientation=LANDSCAPE)
     PDF(path, w, h)
 end
 
-function PNG(path, width_px, height_px)
+function PNG(path, width_px::Int, height_px::Int)
     Attribute("PNG", STAGE_OUTPUT,
               with_defaults([(c, a) -> c.context = X.CairoContext(X.CairoRGBSurface(width_px, height_px))]),
               [ctx(c -> X.write_to_png(c.surface, path)),
+               (c,a) -> println("wrote $(path)"),
                ctx(c -> X.destroy(c))])
 end
 
@@ -357,15 +358,19 @@ end
 
 # --- axes (coordinate scaling)
 
-function Axes(; scale=1, border=0.1, centred=false)
+function Axes(; scale=1, border=0.1, centred=true, negative=false)
     Attribute("Axes", STAGE_AXES,
-              [ctx(c -> set_coords(c, scale, border, centred)),
+              [ctx(c -> set_coords(c, scale, border, centred, negative)),
                # start at origin
                ctx(c -> X.move_to(c, 0, 0))],
               NO_ACTIONS)
 end
 
-function set_coords(c, scale, border, centred)
+function set_coords(c, scale, border, centred, negative)
+
+    if isa(scale, Number) 
+        scale = (scale, scale)
+    end
 
     nx, ny = X.width(c.surface), X.height(c.surface)
     portrait = nx < ny
@@ -373,17 +378,31 @@ function set_coords(c, scale, border, centred)
     b = border * sm
     u = sm - 2 * b
 
-    # if portrait, and nx = 10, scale = 2, border = 0.1, then we have
-    # a border b = 1, used u = 8
+    # used (non-border) lengths
+    ux = nx - 2 * b
+    uy = ny - 2 * b
+    println("ux $(ux) uy $(uy)")
+    println("scale $(scale)")
+    sc = max(scale[1] / ux, scale[2] / uy)
+    println("sc $(sc) sc*ux $(sc*ux) sc*uy $(sc*uy)")
+
     if centred
-        # so x is -2.5 to 2.5
-        G.set_coords(c, 0, 0, nx, ny, 
-                     -scale * nx / u, scale * nx / u,
-                     scale * ny / u, -scale * ny / u)
+        if negative
+            G.set_coords(c, 0, 0, nx, ny, -sc*nx, sc*nx, sc*ny, -sc*ny)
+        else
+            dx, dy = scale[1]-sc*ux, scale[2]-sc*uy
+            println("dx $dx dy $dy")
+            G.set_coords(c, 0, 0, nx, ny, -sc*b+dx/2, sc*(nx-b)+dx/2, 
+                         sc*(ny-b)+dy/2, -sc*b+dy/2)
+        end
     else
-        G.set_coords(c, 0, 0, nx, ny,
-                     -scale * b / u, scale * (nx - b) / u,
-                     scale * (ny - b) / u, -scale * b / u)
+        if negative
+            dx, dy = scale[1]-sc*ux, scale[2]-sc*uy
+            G.set_coords(c, 0, 0, nx, ny, -sc*nx+dx/2, sc*nx+dx/2, 
+                         sc*ny+dy/2, -sc*ny+dy/2)
+        else
+            G.set_coords(c, 0, 0, nx, ny, -sc*b, sc*(nx-b), sc*(ny-b), -sc*b)
+        end
     end
 end
 

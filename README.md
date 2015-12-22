@@ -44,21 +44,21 @@ julia> Pkg.add("Drawing")
 
 julia> using Drawing
 
-julia> with(Axes(centred=true), Pen(0.2)) do
-		   paint(Ink("yellow")) do
-			   circle(1)           # face background, painted yellow
-		   end
-		   draw() do
-			   circle(1)           # face outline, drawn black (default)
-			   circle(0.5; from=200deg, to=340deg)    # smile
-		   end
-		   paint() do
-			   move(0.3, 0.25)     # right eye position
-			   circle(0.2)         # paint eye
-			   move(-0.3, 0.25)    # left eye position
-			   circle(0.2)         # paint eye
-		   end
-	   end
+julia> with(Axes(negative=true), Pen(0.2)) do
+           paint(Ink("yellow")) do
+               circle(1)           # face background, painted yellow
+           end
+           draw() do
+               circle(1)           # face outline, drawn black (default)
+               circle(0.5; from=200deg, to=340deg)    # smile
+           end
+           paint() do
+               move(0.3, 0.25)     # right eye position
+               circle(0.2)         # paint eye
+               move(-0.3, 0.25)    # left eye position
+               circle(0.2)         # paint eye
+           end
+       end
 Press RETURN to close window
 ```
 
@@ -74,23 +74,23 @@ julia> r1, r2, r3, n, w = 1, 1, 0.5, 200, 0.5
 julia> d1, d2, rotn = 120, -140, 40
 julia> sat, val, alpha = 0.7, 0.5, 0.1
 julia> width = 2*pi*r1 / n * w
-julia> with(Axes(centred=true),
-		   Translate(0.9, 0.9), Scale(3),
-		   Paper("black"),
-		   Pen(width; cap="round")) do
-		   for x in shuffle!([i / n for i in 1:n])
-			   hue = x * 360
-			   theta1 = deg2rad(rotn + x*360)
-			   theta2 = theta1 + deg2rad(d1)
-			   theta3 = theta1 + deg2rad(d2)
-			   draw(Ink(HSVA(hue, sat, val + (1-val)*rand(), alpha))) do
-				   move(r1 * cos(-theta1), r1  * sin(-theta1))
-				   line(r2 * cos(-theta2), r2  * sin(-theta2))
-				   move(r1 * cos(-theta1), r1  * sin(-theta1))
-				   line(r3 * cos(-theta3), r3  * sin(-theta3))
-			   end
-		   end
-	   end
+julia> with(Axes(negative=true),
+            Translate(0.9, 0.9), Scale(3),
+            Paper("black"),
+            Pen(width; cap="round")) do
+           for x in shuffle!([i / n for i in 1:n])
+               hue = x * 360
+               theta1 = deg2rad(rotn + x*360)
+               theta2 = theta1 + deg2rad(d1)
+               theta3 = theta1 + deg2rad(d2)
+               draw(Ink(HSVA(hue, sat, val + (1-val)*rand(), alpha))) do
+                   move(r1 * cos(-theta1), r1  * sin(-theta1))
+                   line(r2 * cos(-theta2), r2  * sin(-theta2))
+                   move(r1 * cos(-theta1), r1  * sin(-theta1))
+                   line(r3 * cos(-theta3), r3  * sin(-theta3))
+               end
+           end
+       end
 Press RETURN to close window
 ```
 
@@ -198,11 +198,16 @@ the scope, from left to right.
 
 * `Paper(background)` sets the background colour.
 
-* `Axes(; scale=1, border=0.1, centred=false)` Sets the Cairo user
-  coordinates.  Excluding the border (measured as a fraction of the smallest
-  side), the coordinate system is either bottom left, or centred, and is
-  scaled uniformly (assuming square pixels), so that the smallest axis has
-  unit length.
+* `Axes(; scale=1, border=0.1, centred=true, negative=false)` Sets the
+  Cairo user coordinates.  Excluding the border (measured as a
+  fraction of the smallest side), the coordinate system is either
+  bottom left, or centred, and is scaled uniformly (ie assuming square
+  pixels), so that the smallest axis has the given scale (length).  If
+  `negative=true` then the axis is from `-scale` to `scale`.
+
+  The `scale` can also be a tuple, `(nx, ny)`.  In that case, the
+  scale is chosen so that both those scales fit within the plotting
+  area (but pixels remain square).
 
   Below are plotted unit axes (x is horizontal) for 100x140 pixel images, with
   a border of 0.1 (ie 10 pixels), where the landscape axes are centred.  Note
@@ -288,3 +293,8 @@ nearest orange cross.
   [![align](test/target/text-align.png)](test/text-align.jl)
 
 *Click on image to see associated script.*
+
+# Changes
+
+* Post 0.1: Changed `Axes()` so that what was `centred` is now `negative`,
+  while what is now `centred` is *really* centred.

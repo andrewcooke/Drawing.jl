@@ -7,7 +7,7 @@ q = 0.9375
 with(
      PNG("ndy.png", 300, 300), 
 #     TK(300, 300), 
-     Axes(centred=true)) do
+     Axes(negative=true)) do
          paint(Ink("darkgreen")) do
              square(100, align=5)
          end

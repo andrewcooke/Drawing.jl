@@ -16,11 +16,12 @@ ignore || compare("scale.png")
 draw(axes, PNG("translate.png", 100, 140), Paper("lightgrey"), Translate(0.1, 0.1))
 ignore || compare("translate.png")
 
-draw(axes, PNG("centred-portrait.png", 100, 140), Paper("lightgrey"), Axes(centred=true))
-ignore || compare("centred-portrait.png")
+draw(axes, PNG("negative-portrait.png", 100, 140), Paper("lightgrey"), 
+     Axes(negative=true))
+ignore || compare("negative-portrait.png")
 
-include("centred-landscape.jl")
-ignore || compare("centred-landscape.png")
+include("negative-landscape.jl")
+ignore || compare("negative-landscape.png")
 
 include("round-round.jl")
 ignore || compare("round-round.png")

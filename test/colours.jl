@@ -14,7 +14,7 @@ srand(0)
 
 with(
      PNG("colour-ring.png", side, side), 
-     Axes(centred=true),
+     Axes(negative=true),
      Translate(0.9, 0.9), Scale(3),
      Paper("black"),
      Pen(width; cap="round")) do

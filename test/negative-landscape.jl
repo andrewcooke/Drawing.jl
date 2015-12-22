@@ -1,6 +1,6 @@
 
-draw(PNG("centred-landscape.png", 140, 100),
-     Axes(centred=true),
+draw(PNG("negative-landscape.png", 140, 100),
+     Axes(negative=true),
      Paper("lightgrey"),
      # default Pen is 0.02.  use 0.04 here so consistent with bottom
      # left image which is twice as dark because the user coordinates
