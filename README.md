@@ -39,6 +39,8 @@ In providing a simple API, the package has two important aims:
 
 # Examples
 
+## Smiley Face
+
 ```julia
 julia> Pkg.add("Drawing")
 
@@ -65,6 +67,8 @@ Press RETURN to close window
 which displays this window:
 
 ![screenshot](screenshot.png)
+
+## Transparent Colours
 
 Pressing return and continuing...
 
@@ -97,6 +101,11 @@ Press RETURN to close window
 displays
 
 ![screenshot](screenshot2.png)
+
+## Other
+
+* A [chart](examples/go-1.png) showing evolution of a genetic
+  algorithm over time.
 
 # API
 
