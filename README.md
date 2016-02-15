@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/andrewcooke/Drawing.jl.svg?branch=master)](https://travis-ci.org/andrewcooke/Drawing.jl)
 
+Tests failing because of problems with Tk:
 [![Drawing](http://pkg.julialang.org/badges/Drawing_0.4.svg)](http://pkg.julialang.org/?pkg=Drawing&ver=0.4)
 [![Drawing](http://pkg.julialang.org/badges/Drawing_0.5.svg)](http://pkg.julialang.org/?pkg=Drawing&ver=0.5)
 
