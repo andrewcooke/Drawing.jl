@@ -1,4 +1,8 @@
 [![Build Status](https://travis-ci.org/andrewcooke/Drawing.jl.svg?branch=master)](https://travis-ci.org/andrewcooke/Drawing.jl)
+[![Coverage Status](https://coveralls.io/repos/andrewcooke/Drawing.jl/badge.svg)](https://coveralls.io/r/andrewcooke/Drawing.jl)
+
+[![Drawing](http://pkg.julialang.org/badges/Drawing_0.4.svg)](http://pkg.julialang.org/?pkg=Drawing&ver=0.4)
+[![Drawing](http://pkg.julialang.org/badges/Drawing_0.5.svg)](http://pkg.julialang.org/?pkg=Drawing&ver=0.5)
 
 ## Warning:
 
